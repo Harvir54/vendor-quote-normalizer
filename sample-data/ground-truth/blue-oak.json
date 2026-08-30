@@ -1,0 +1,69 @@
+{
+  "schema_version": "1.0",
+  "document": {
+    "fixture_id": "painting-blue-oak-001",
+    "source_file": "../quotes/synthetic-painting-estimate-blue-oak.pdf",
+    "is_synthetic": true,
+    "document_type": "estimate"
+  },
+  "vendor": {
+    "name": "Blue Oak Painting Co.",
+    "phone": "(951) 555-0148",
+    "email": "estimating@blueoak.example"
+  },
+  "project": {
+    "customer": "Canyon Vista Property Management",
+    "address": "1234 Canyon Vista Drive, Unit 204, Riverside, CA 92507",
+    "property_type": "apartment",
+    "occupancy": "vacant",
+    "bedrooms": 2,
+    "bathrooms": 1,
+    "approximate_square_feet": 925,
+    "trade": "interior_painting"
+  },
+  "estimate": {
+    "number": "BOP-260814",
+    "issued_date": "2026-08-14",
+    "valid_through": "2026-09-13",
+    "subtotal_cents": 475000,
+    "sales_tax_cents": 0,
+    "total_cents": 475000,
+    "deposit_percent": 40,
+    "duration_working_days": 4,
+    "start_timing": "After access is provided",
+    "warranty": "Two-year labor warranty"
+  },
+  "scope_items": [
+    {"category": "surface_protection", "status": "included", "price_cents": 30000, "evidence": "Protect flooring, counters, appliances, and fixtures with plastic and drop cloths."},
+    {"category": "drywall_repair", "status": "included", "price_cents": 55000, "evidence": "Patch nail holes, minor dents, and up to 20 sq. ft. of damaged drywall; sand repaired areas."},
+    {"category": "primer", "status": "included", "price_cents": 25000, "evidence": "Spot-prime all repaired and stained areas with stain-blocking primer."},
+    {"category": "walls", "status": "included", "price_cents": 180000, "evidence": "Apply two finish coats to walls in living room, kitchen, hallway, two bedrooms, and bathroom."},
+    {"category": "wall_coat_count", "status": "included", "value": 2, "evidence": "Apply two finish coats to walls"},
+    {"category": "ceilings", "status": "included", "price_cents": 65000, "evidence": "Apply one flat-white finish coat to all ceilings, including bathroom ceiling."},
+    {"category": "trim", "status": "included", "price_cents": 70000, "evidence": "Paint baseboards, door casings, and five interior doors with semi-gloss enamel.", "notes": "Price is combined with interior doors."},
+    {"category": "interior_doors", "status": "included", "price_cents": 70000, "evidence": "Paint baseboards, door casings, and five interior doors with semi-gloss enamel.", "notes": "Five doors; price is combined with trim."},
+    {"category": "paint_and_materials", "status": "included", "price_cents": 50000, "evidence": "Sherwin-Williams Duration Home paint, primer, caulk, masking, and sundry materials."},
+    {"category": "cleanup", "status": "included", "evidence": "Price includes daily cleanup, final broom cleaning, removal of masking materials"},
+    {"category": "debris_disposal", "status": "included", "evidence": "legal disposal of painting debris"},
+    {"category": "labor_warranty", "status": "included", "value": "2 years", "evidence": "Two-year labor warranty covering peeling, blistering, or adhesion failure caused by workmanship."}
+  ],
+  "line_items": [
+    {"description": "Surface protection", "amount_cents": 30000},
+    {"description": "Drywall repair", "amount_cents": 55000},
+    {"description": "Spot primer", "amount_cents": 25000},
+    {"description": "Two wall coats", "amount_cents": 180000},
+    {"description": "Ceilings", "amount_cents": 65000},
+    {"description": "Trim and five interior doors", "amount_cents": 70000},
+    {"description": "Paint and materials", "amount_cents": 50000}
+  ],
+  "exclusions": [
+    "Lead or asbestos testing and abatement",
+    "Repair of active leaks or water intrusion",
+    "Replacement of damaged drywall beyond 20 sq. ft.",
+    "Cabinets and closets",
+    "Exterior surfaces",
+    "Moving tenant belongings",
+    "After-hours work"
+  ],
+  "risk_flags": []
+}

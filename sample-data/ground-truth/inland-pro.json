@@ -1,0 +1,72 @@
+{
+  "schema_version": "1.0",
+  "document": {
+    "fixture_id": "painting-inland-pro-002",
+    "source_file": "../quotes/synthetic-painting-estimate-inland-pro.pdf",
+    "is_synthetic": true,
+    "document_type": "proposal"
+  },
+  "vendor": {
+    "name": "Inland Pro Paint & Repair",
+    "phone": "(951) 555-0186",
+    "email": "inlandpropaint@example.com"
+  },
+  "project": {
+    "customer": "Canyon Vista Property Management",
+    "address": "1234 Canyon Vista Dr. #204, Riverside, CA 92507",
+    "property_type": "apartment",
+    "occupancy": "vacant",
+    "bedrooms": 2,
+    "bathrooms": null,
+    "approximate_square_feet": null,
+    "trade": "interior_painting"
+  },
+  "estimate": {
+    "number": "IP-8826",
+    "issued_date": "2026-08-16",
+    "valid_through": null,
+    "subtotal_cents": null,
+    "sales_tax_cents": null,
+    "total_cents": 389000,
+    "deposit_percent": 50,
+    "duration_working_days": 3,
+    "start_timing": "Seven to ten business days after approval",
+    "warranty": null
+  },
+  "scope_items": [
+    {"category": "surface_protection", "status": "not_stated", "evidence": null},
+    {"category": "drywall_repair", "status": "included", "price_cents": null, "evidence": "Includes light sanding, filling ordinary nail holes", "notes": "Larger drywall patches are excluded."},
+    {"category": "primer", "status": "not_stated", "evidence": "primer ... not specified in this proposal"},
+    {"category": "walls", "status": "included", "price_cents": 325000, "evidence": "Prep and paint apartment walls."},
+    {"category": "wall_coat_count", "status": "included", "value": 1, "evidence": "one finish coat throughout"},
+    {"category": "ceilings", "status": "excluded", "price_cents": null, "evidence": "Ceilings are not included."},
+    {"category": "trim", "status": "included", "price_cents": 42000, "evidence": "Paint baseboards and five interior doors.", "notes": "Door casings are not stated; price is combined with doors."},
+    {"category": "interior_doors", "status": "included", "price_cents": 42000, "evidence": "Paint baseboards and five interior doors.", "notes": "Five doors; price is combined with baseboards."},
+    {"category": "paint_and_materials", "status": "unclear", "price_cents": 22000, "evidence": "Paint and supply allowance. Contractor-grade interior paint; final brand and sheen to be selected by contractor based on availability.", "notes": "Allowance may be adjusted for premium products or specialty colors."},
+    {"category": "cleanup", "status": "not_stated", "evidence": "Cleanup ... not specified in this proposal."},
+    {"category": "debris_disposal", "status": "not_stated", "evidence": "debris disposal ... not specified in this proposal."},
+    {"category": "labor_warranty", "status": "not_stated", "evidence": "labor warranty terms are not specified in this proposal."}
+  ],
+  "line_items": [
+    {"description": "Prep and paint apartment walls with one finish coat", "amount_cents": 325000},
+    {"description": "Baseboards and five interior doors", "amount_cents": 42000},
+    {"description": "Paint and supply allowance", "amount_cents": 22000}
+  ],
+  "exclusions": [
+    "Ceilings",
+    "Drywall patches larger than ordinary nail holes",
+    "Stain sealing",
+    "Color changes requiring additional coats",
+    "Closets",
+    "Cabinets",
+    "Repairs related to water damage"
+  ],
+  "risk_flags": [
+    {"code": "ALLOWANCE_MAY_CHANGE", "severity": "high", "message": "The $220 material allowance may increase for the selected paint or color."},
+    {"code": "ADDITIONAL_COATS_EXTRA", "severity": "high", "message": "Only one wall coat is included; additional coats cost extra."},
+    {"code": "CLEANUP_NOT_STATED", "severity": "medium", "message": "Cleanup responsibility is not stated."},
+    {"code": "DISPOSAL_NOT_STATED", "severity": "medium", "message": "Debris disposal is not stated."},
+    {"code": "WARRANTY_NOT_STATED", "severity": "medium", "message": "No labor warranty is stated."},
+    {"code": "PRIMER_NOT_STATED", "severity": "medium", "message": "Primer is not specified."}
+  ]
+}
