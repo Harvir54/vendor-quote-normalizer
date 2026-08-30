@@ -30,6 +30,18 @@ class NormalizerTests(unittest.TestCase):
                     "coat_count": None,
                 },
                 "primer": {"status": "not_stated", "evidence": None},
+                "drywall_repair": {
+                    "status": "not_stated",
+                    "evidence": None,
+                    "limitations": [],
+                },
+                "cleanup": {"status": "not_stated", "evidence": None},
+                "debris_disposal": {"status": "not_stated", "evidence": None},
+                "labor_warranty": {
+                    "status": "not_stated",
+                    "evidence": None,
+                    "duration_years": None,
+                },
             },
         )
 
@@ -44,6 +56,10 @@ class NormalizerTests(unittest.TestCase):
         self.assertEqual(result["walls"]["status"], "included")
         self.assertEqual(result["walls"]["coat_count"], 2)
         self.assertEqual(result["primer"]["status"], "included")
+        self.assertEqual(result["drywall_repair"]["status"], "included")
+        self.assertEqual(result["cleanup"]["status"], "included")
+        self.assertEqual(result["debris_disposal"]["status"], "included")
+        self.assertEqual(result["labor_warranty"]["duration_years"], 2)
 
     def test_normalizes_inland_pro_pdf(self):
         result = normalize_estimate(
@@ -56,6 +72,11 @@ class NormalizerTests(unittest.TestCase):
         self.assertEqual(result["walls"]["status"], "included")
         self.assertEqual(result["walls"]["coat_count"], 1)
         self.assertEqual(result["primer"]["status"], "not_stated")
+        self.assertEqual(result["drywall_repair"]["status"], "included")
+        self.assertTrue(result["drywall_repair"]["limitations"])
+        self.assertEqual(result["cleanup"]["status"], "not_stated")
+        self.assertEqual(result["debris_disposal"]["status"], "not_stated")
+        self.assertEqual(result["labor_warranty"]["status"], "not_stated")
 
 
 if __name__ == "__main__":

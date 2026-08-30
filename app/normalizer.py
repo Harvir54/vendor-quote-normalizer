@@ -10,9 +10,15 @@ from app.pdf_text import (
     find_vendor_name,
 )
 from app.scope import (
+    RepairScopeItem,
     ScopeItem,
     WallScopeItem,
+    WarrantyScopeItem,
     classify_ceilings,
+    classify_cleanup,
+    classify_debris_disposal,
+    classify_drywall_repair,
+    classify_labor_warranty,
     classify_primer,
     classify_walls,
 )
@@ -25,6 +31,10 @@ class NormalizedEstimate(TypedDict):
     ceilings: ScopeItem
     walls: WallScopeItem
     primer: ScopeItem
+    drywall_repair: RepairScopeItem
+    cleanup: ScopeItem
+    debris_disposal: ScopeItem
+    labor_warranty: WarrantyScopeItem
 
 
 def normalize_estimate_text(text: str) -> NormalizedEstimate:
@@ -36,6 +46,10 @@ def normalize_estimate_text(text: str) -> NormalizedEstimate:
         "ceilings": classify_ceilings(text),
         "walls": classify_walls(text),
         "primer": classify_primer(text),
+        "drywall_repair": classify_drywall_repair(text),
+        "cleanup": classify_cleanup(text),
+        "debris_disposal": classify_debris_disposal(text),
+        "labor_warranty": classify_labor_warranty(text),
     }
 
 

@@ -2,7 +2,15 @@ import unittest
 from pathlib import Path
 
 from app.pdf_text import extract_pdf_text
-from app.scope import classify_ceilings, classify_primer, classify_walls
+from app.scope import (
+    classify_ceilings,
+    classify_cleanup,
+    classify_debris_disposal,
+    classify_drywall_repair,
+    classify_labor_warranty,
+    classify_primer,
+    classify_walls,
+)
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -142,6 +150,103 @@ class PrimerScopeTests(unittest.TestCase):
         self.assertIn("Spot-prime", blue_result["evidence"])
         self.assertEqual(inland_result["status"], "not_stated")
         self.assertIn("not specified", inland_result["evidence"])
+
+
+class RemainingScopeTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.blue_oak = extract_pdf_text(
+            QUOTES / "synthetic-painting-estimate-blue-oak.pdf"
+        )
+        cls.inland_pro = extract_pdf_text(
+            QUOTES / "synthetic-painting-estimate-inland-pro.pdf"
+        )
+
+    def test_drywall_repair_includes_minor_work_and_retains_limits(self):
+        result = classify_drywall_repair(
+            "Fill ordinary nail holes. Drywall patches larger than nail holes "
+            "will be quoted separately."
+        )
+        self.assertEqual(result["status"], "included")
+        self.assertIn("Fill ordinary nail holes.", result["evidence"])
+        self.assertEqual(len(result["limitations"]), 1)
+
+    def test_drywall_repair_handles_full_exclusion(self):
+        result = classify_drywall_repair("Drywall repair is not included.")
+        self.assertEqual(result["status"], "excluded")
+
+    def test_drywall_repair_handles_missing_language(self):
+        self.assertEqual(
+            classify_drywall_repair("Paint all walls."),
+            {"status": "not_stated", "evidence": None, "limitations": []},
+        )
+
+    def test_cleanup_statuses(self):
+        self.assertEqual(
+            classify_cleanup("Price includes daily cleanup.")["status"],
+            "included",
+        )
+        self.assertEqual(
+            classify_cleanup("Cleanup is not included.")["status"],
+            "excluded",
+        )
+        self.assertEqual(
+            classify_cleanup("Cleanup terms are not specified.")["status"],
+            "not_stated",
+        )
+
+    def test_disposal_statuses(self):
+        self.assertEqual(
+            classify_debris_disposal("Price includes legal disposal of debris.")[
+                "status"
+            ],
+            "included",
+        )
+        self.assertEqual(
+            classify_debris_disposal("Debris disposal is excluded.")["status"],
+            "excluded",
+        )
+        self.assertEqual(
+            classify_debris_disposal("Disposal is not specified.")["status"],
+            "not_stated",
+        )
+
+    def test_warranty_status_and_duration(self):
+        included = classify_labor_warranty("Two-year labor warranty included.")
+        self.assertEqual(included["status"], "included")
+        self.assertEqual(included["duration_years"], 2)
+
+        missing = classify_labor_warranty("Labor warranty is not specified.")
+        self.assertEqual(missing["status"], "not_stated")
+        self.assertIsNone(missing["duration_years"])
+
+    def test_sample_drywall_repair(self):
+        blue = classify_drywall_repair(self.blue_oak)
+        inland = classify_drywall_repair(self.inland_pro)
+        self.assertEqual(blue["status"], "included")
+        self.assertTrue(blue["limitations"])
+        self.assertEqual(inland["status"], "included")
+        self.assertTrue(inland["limitations"])
+
+    def test_sample_cleanup_and_disposal(self):
+        self.assertEqual(classify_cleanup(self.blue_oak)["status"], "included")
+        self.assertEqual(
+            classify_cleanup(self.inland_pro)["status"], "not_stated"
+        )
+        self.assertEqual(
+            classify_debris_disposal(self.blue_oak)["status"], "included"
+        )
+        self.assertEqual(
+            classify_debris_disposal(self.inland_pro)["status"], "not_stated"
+        )
+
+    def test_sample_labor_warranty(self):
+        blue = classify_labor_warranty(self.blue_oak)
+        inland = classify_labor_warranty(self.inland_pro)
+        self.assertEqual(blue["status"], "included")
+        self.assertEqual(blue["duration_years"], 2)
+        self.assertTrue(blue["evidence"].startswith("Two-year labor warranty"))
+        self.assertEqual(inland["status"], "not_stated")
 
 
 if __name__ == "__main__":

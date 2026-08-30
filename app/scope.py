@@ -16,11 +16,20 @@ class WallScopeItem(ScopeItem):
     coat_count: int | None
 
 
+class RepairScopeItem(ScopeItem):
+    limitations: list[str]
+
+
+class WarrantyScopeItem(ScopeItem):
+    duration_years: int | None
+
+
 NUMBER_WORDS = {
     "one": 1,
     "two": 2,
     "three": 3,
     "four": 4,
+    "five": 5,
 }
 
 
@@ -54,6 +63,81 @@ def _find_coat_count(text: str) -> int | None:
 
     value = match.group(1).lower()
     return NUMBER_WORDS.get(value, int(value) if value.isdigit() else None)
+
+
+def _joined_evidence_options(text: str, pattern: str) -> list[str]:
+    """Find matching chunks and reconnect nearby lines split by PDF layout."""
+    chunks = _sentence_chunks(text)
+    options: list[str] = []
+
+    for index, chunk in enumerate(chunks):
+        if not re.search(pattern, chunk, re.IGNORECASE):
+            continue
+
+        evidence = chunk
+        if index > 0:
+            previous = chunks[index - 1]
+            is_wrapped_prose = (
+                not re.search(r"[.!?;:]$", previous)
+                and re.search(r"[A-Za-z]", previous)
+                and not previous.isupper()
+            )
+            if is_wrapped_prose:
+                evidence = f"{previous} {evidence}"
+        next_index = index + 1
+        while next_index < len(chunks) and next_index <= index + 3:
+            needs_continuation = not re.search(r"[.!?;:]$", evidence)
+            abbreviation_split = bool(
+                re.search(r"\b(?:sq|ft)\.$", evidence, re.IGNORECASE)
+            )
+            if not needs_continuation and not abbreviation_split:
+                break
+            evidence = f"{evidence} {chunks[next_index]}"
+            next_index += 1
+        options.append(evidence)
+
+    return options
+
+
+def _classify_simple_scope(
+    text: str,
+    pattern: str,
+    included_terms: tuple[str, ...],
+) -> ScopeItem:
+    """Classify a straightforward scope category from matching evidence."""
+    evidence_options = _joined_evidence_options(text, pattern)
+    if not evidence_options:
+        return {"status": "not_stated", "evidence": None}
+
+    for evidence in evidence_options:
+        lowered = evidence.lower()
+        if any(term in lowered for term in ("not included", "excluded", "excluding")):
+            return {"status": "excluded", "evidence": evidence}
+
+    for evidence in evidence_options:
+        lowered = evidence.lower()
+        if any(term in lowered for term in ("not specified", "not stated", "not addressed")):
+            return {"status": "not_stated", "evidence": evidence}
+
+    conditional_terms = (
+        "may",
+        "optional",
+        "if needed",
+        "as needed",
+        "if requested",
+        "to be determined",
+    )
+    for evidence in evidence_options:
+        lowered = evidence.lower()
+        if any(term in lowered for term in conditional_terms):
+            return {"status": "unclear", "evidence": evidence}
+
+    for evidence in evidence_options:
+        lowered = evidence.lower()
+        if any(term in lowered for term in included_terms):
+            return {"status": "included", "evidence": evidence}
+
+    return {"status": "unclear", "evidence": evidence_options[0]}
 
 
 def classify_ceilings(text: str) -> ScopeItem:
@@ -228,3 +312,115 @@ def classify_primer(text: str) -> ScopeItem:
             return {"status": "included", "evidence": evidence}
 
     return {"status": "unclear", "evidence": evidence_options[0]}
+
+
+def classify_drywall_repair(text: str) -> RepairScopeItem:
+    """Classify minor drywall preparation and retain stated limitations."""
+    evidence_options = _joined_evidence_options(
+        text,
+        r"\bdrywall\b|\bnail holes?\b|\bminor dents?\b",
+    )
+    if not evidence_options:
+        return {"status": "not_stated", "evidence": None, "limitations": []}
+
+    limitation_terms = (
+        "not included",
+        "excluded",
+        "larger than",
+        "beyond",
+        "quoted separately",
+    )
+    limitations = [
+        evidence
+        for evidence in evidence_options
+        if any(term in evidence.lower() for term in limitation_terms)
+    ]
+
+    for evidence in evidence_options:
+        lowered = evidence.lower()
+        is_limitation = any(term in lowered for term in limitation_terms)
+        includes_repair = any(
+            term in lowered
+            for term in ("patch", "fill", "filling", "repair", "minor dents")
+        )
+        if includes_repair and not is_limitation:
+            return {
+                "status": "included",
+                "evidence": evidence,
+                "limitations": limitations,
+            }
+
+    for evidence in evidence_options:
+        lowered = evidence.lower()
+        if "not specified" in lowered or "not stated" in lowered:
+            return {
+                "status": "not_stated",
+                "evidence": evidence,
+                "limitations": limitations,
+            }
+
+    if limitations:
+        has_full_exclusion = any(
+            "not included" in item.lower() or "excluded" in item.lower()
+            for item in limitations
+        )
+        return {
+            "status": "excluded" if has_full_exclusion else "unclear",
+            "evidence": limitations[0],
+            "limitations": limitations,
+        }
+
+    return {
+        "status": "unclear",
+        "evidence": evidence_options[0],
+        "limitations": [],
+    }
+
+
+def classify_cleanup(text: str) -> ScopeItem:
+    """Classify jobsite cleanup."""
+    return _classify_simple_scope(
+        text,
+        r"\bcleanup\b|\bcleaning\b",
+        ("includes", "included", "cleanup", "cleaning"),
+    )
+
+
+def classify_debris_disposal(text: str) -> ScopeItem:
+    """Classify debris or waste disposal."""
+    return _classify_simple_scope(
+        text,
+        r"\bdisposal\b|\bdispose\b|\bhauling\b|\bdebris removal\b",
+        ("legal disposal", "disposal included", "dispose", "hauling", "debris removal"),
+    )
+
+
+def classify_labor_warranty(text: str) -> WarrantyScopeItem:
+    """Classify the labor warranty and extract its duration in years."""
+    result = _classify_simple_scope(
+        text,
+        r"\bwarrant(?:y|ies)\b",
+        ("labor warranty", "workmanship warranty", "warranty included"),
+    )
+    evidence = result["evidence"]
+    if evidence:
+        evidence = re.sub(r"^WARRANTY\s+", "", evidence, flags=re.IGNORECASE)
+
+    duration_years = None
+    if evidence:
+        match = re.search(
+            r"\b(one|two|three|four|five|\d+)[ -]year\b",
+            evidence,
+            re.IGNORECASE,
+        )
+        if match:
+            value = match.group(1).lower()
+            duration_years = NUMBER_WORDS.get(
+                value, int(value) if value.isdigit() else None
+            )
+
+    return {
+        "status": result["status"],
+        "evidence": evidence,
+        "duration_years": duration_years,
+    }
