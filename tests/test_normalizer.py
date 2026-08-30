@@ -29,6 +29,7 @@ class NormalizerTests(unittest.TestCase):
                     "evidence": "Paint walls: $500.00",
                     "coat_count": None,
                 },
+                "primer": {"status": "not_stated", "evidence": None},
             },
         )
 
@@ -42,6 +43,7 @@ class NormalizerTests(unittest.TestCase):
         self.assertEqual(result["ceilings"]["status"], "included")
         self.assertEqual(result["walls"]["status"], "included")
         self.assertEqual(result["walls"]["coat_count"], 2)
+        self.assertEqual(result["primer"]["status"], "included")
 
     def test_normalizes_inland_pro_pdf(self):
         result = normalize_estimate(
@@ -53,6 +55,7 @@ class NormalizerTests(unittest.TestCase):
         self.assertEqual(result["ceilings"]["status"], "excluded")
         self.assertEqual(result["walls"]["status"], "included")
         self.assertEqual(result["walls"]["coat_count"], 1)
+        self.assertEqual(result["primer"]["status"], "not_stated")
 
 
 if __name__ == "__main__":

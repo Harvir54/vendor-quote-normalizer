@@ -2,7 +2,7 @@ import unittest
 from pathlib import Path
 
 from app.pdf_text import extract_pdf_text
-from app.scope import classify_ceilings, classify_walls
+from app.scope import classify_ceilings, classify_primer, classify_walls
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -97,6 +97,51 @@ class WallScopeTests(unittest.TestCase):
         inland_result = classify_walls(inland_pro)
         self.assertEqual(inland_result["coat_count"], 1)
         self.assertIn("one finish coat throughout.", inland_result["evidence"])
+
+
+class PrimerScopeTests(unittest.TestCase):
+    def test_classifies_spot_primer_as_included(self):
+        result = classify_primer(
+            "Spot-prime all repaired areas with stain-blocking primer."
+        )
+        self.assertEqual(result["status"], "included")
+        self.assertEqual(
+            result["evidence"],
+            "Spot-prime all repaired areas with stain-blocking primer.",
+        )
+
+    def test_classifies_excluded_primer(self):
+        result = classify_primer("Primer is not included in this estimate.")
+        self.assertEqual(result["status"], "excluded")
+
+    def test_classifies_unspecified_primer_as_not_stated(self):
+        result = classify_primer("Primer terms are not specified.")
+        self.assertEqual(result["status"], "not_stated")
+        self.assertEqual(result["evidence"], "Primer terms are not specified.")
+
+    def test_classifies_conditional_primer_as_unclear(self):
+        result = classify_primer("Primer may be applied if needed.")
+        self.assertEqual(result["status"], "unclear")
+
+    def test_classifies_missing_primer_language_as_not_stated(self):
+        self.assertEqual(
+            classify_primer("Apply two coats to all walls."),
+            {"status": "not_stated", "evidence": None},
+        )
+
+    def test_classifies_sample_primer_scope(self):
+        blue_oak = extract_pdf_text(
+            QUOTES / "synthetic-painting-estimate-blue-oak.pdf"
+        )
+        inland_pro = extract_pdf_text(
+            QUOTES / "synthetic-painting-estimate-inland-pro.pdf"
+        )
+        blue_result = classify_primer(blue_oak)
+        inland_result = classify_primer(inland_pro)
+        self.assertEqual(blue_result["status"], "included")
+        self.assertIn("Spot-prime", blue_result["evidence"])
+        self.assertEqual(inland_result["status"], "not_stated")
+        self.assertIn("not specified", inland_result["evidence"])
 
 
 if __name__ == "__main__":

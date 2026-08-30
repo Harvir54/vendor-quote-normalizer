@@ -175,3 +175,56 @@ def classify_walls(text: str) -> WallScopeItem:
         "evidence": evidence_options[0],
         "coat_count": _find_coat_count(evidence_options[0]),
     }
+
+
+def classify_primer(text: str) -> ScopeItem:
+    """Classify whether primer or spot-priming is included."""
+    evidence_options = [
+        chunk
+        for chunk in _sentence_chunks(text)
+        if re.search(r"\bprim(?:e|er|ing)\b", chunk, re.IGNORECASE)
+    ]
+
+    if not evidence_options:
+        return {"status": "not_stated", "evidence": None}
+
+    for evidence in evidence_options:
+        lowered = evidence.lower()
+        if any(
+            phrase in lowered
+            for phrase in ("not included", "excluded", "excluding")
+        ):
+            return {"status": "excluded", "evidence": evidence}
+
+    for evidence in evidence_options:
+        lowered = evidence.lower()
+        if any(
+            phrase in lowered
+            for phrase in ("not specified", "not stated", "not addressed")
+        ):
+            return {"status": "not_stated", "evidence": evidence}
+
+    for evidence in evidence_options:
+        lowered = evidence.lower()
+        if any(
+            phrase in lowered
+            for phrase in (
+                "may",
+                "optional",
+                "if needed",
+                "as needed",
+                "if requested",
+                "to be determined",
+            )
+        ):
+            return {"status": "unclear", "evidence": evidence}
+
+    for evidence in evidence_options:
+        lowered = evidence.lower()
+        if any(
+            phrase in lowered
+            for phrase in ("prime", "primer", "priming", "included", "includes")
+        ):
+            return {"status": "included", "evidence": evidence}
+
+    return {"status": "unclear", "evidence": evidence_options[0]}
