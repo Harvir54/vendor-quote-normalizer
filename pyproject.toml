@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "vendor-quote-normalizer"
+version = "0.1.0"
+description = "Normalize contractor estimates for side-by-side comparison."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+  "pypdf>=6.0,<7.0",
+]
+
+[project.scripts]
+quote-normalizer = "app.cli:main"
+
+[tool.setuptools]
+packages = ["app"]
