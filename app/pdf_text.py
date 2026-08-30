@@ -44,3 +44,17 @@ def extract_pdf_text(pdf_path: Path) -> str:
 def find_money_values(text: str) -> list[str]:
     money_pattern = r"\$[\d,]+\.\d{2}"
     return re.findall(money_pattern, text)
+
+
+def find_estimate_total(text: str) -> str | None:
+    total_pattern = (
+        r"(?:ESTIMATE\s+TOTAL|ESTIMATED\s+TOTAL)\s*"
+        r"(\$[\d,]+\.\d{2})"
+    )
+
+    match = re.search(total_pattern, text, re.IGNORECASE)
+
+    if match:
+        return match.group(1)
+
+    return None
