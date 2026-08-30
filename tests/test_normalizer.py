@@ -13,7 +13,7 @@ class NormalizerTests(unittest.TestCase):
         text = (
             "Example Painting Co.\n"
             "ESTIMATE\n"
-            "Wall preparation: $500.00\n"
+            "Paint walls: $500.00\n"
             "ESTIMATE TOTAL\n"
             "$2,000.00"
         )
@@ -24,6 +24,11 @@ class NormalizerTests(unittest.TestCase):
                 "estimate_total": "$2,000.00",
                 "all_money_values": ["$500.00", "$2,000.00"],
                 "ceilings": {"status": "not_stated", "evidence": None},
+                "walls": {
+                    "status": "included",
+                    "evidence": "Paint walls: $500.00",
+                    "coat_count": None,
+                },
             },
         )
 
@@ -35,6 +40,8 @@ class NormalizerTests(unittest.TestCase):
         self.assertEqual(result["estimate_total"], "$4,750.00")
         self.assertIn("$300.00", result["all_money_values"])
         self.assertEqual(result["ceilings"]["status"], "included")
+        self.assertEqual(result["walls"]["status"], "included")
+        self.assertEqual(result["walls"]["coat_count"], 2)
 
     def test_normalizes_inland_pro_pdf(self):
         result = normalize_estimate(
@@ -44,6 +51,8 @@ class NormalizerTests(unittest.TestCase):
         self.assertEqual(result["estimate_total"], "$3,890.00")
         self.assertIn("$220.00", result["all_money_values"])
         self.assertEqual(result["ceilings"]["status"], "excluded")
+        self.assertEqual(result["walls"]["status"], "included")
+        self.assertEqual(result["walls"]["coat_count"], 1)
 
 
 if __name__ == "__main__":

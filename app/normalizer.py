@@ -9,7 +9,7 @@ from app.pdf_text import (
     find_money_values,
     find_vendor_name,
 )
-from app.scope import ScopeItem, classify_ceilings
+from app.scope import ScopeItem, WallScopeItem, classify_ceilings, classify_walls
 
 
 class NormalizedEstimate(TypedDict):
@@ -17,6 +17,7 @@ class NormalizedEstimate(TypedDict):
     estimate_total: str | None
     all_money_values: list[str]
     ceilings: ScopeItem
+    walls: WallScopeItem
 
 
 def normalize_estimate_text(text: str) -> NormalizedEstimate:
@@ -26,6 +27,7 @@ def normalize_estimate_text(text: str) -> NormalizedEstimate:
         "estimate_total": find_estimate_total(text),
         "all_money_values": find_money_values(text),
         "ceilings": classify_ceilings(text),
+        "walls": classify_walls(text),
     }
 
 
