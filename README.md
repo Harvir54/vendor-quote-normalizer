@@ -51,6 +51,15 @@ Run the tests:
 python -m unittest discover -s tests -v
 ```
 
+Start the local API server:
+
+```bash
+python -m uvicorn app.api:app --reload
+```
+
+Then open `http://127.0.0.1:8000/docs` to test the API through FastAPI's
+interactive documentation page.
+
 ## Next step
 
 Convert extracted text into the structured comparison schema and evaluate it
