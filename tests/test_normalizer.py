@@ -1,0 +1,47 @@
+import unittest
+from pathlib import Path
+
+from app.normalizer import normalize_estimate, normalize_estimate_text
+
+
+ROOT = Path(__file__).resolve().parents[1]
+QUOTES = ROOT / "sample-data" / "quotes"
+
+
+class NormalizerTests(unittest.TestCase):
+    def test_normalizes_estimate_text(self):
+        text = (
+            "Example Painting Co.\n"
+            "ESTIMATE\n"
+            "Wall preparation: $500.00\n"
+            "ESTIMATE TOTAL\n"
+            "$2,000.00"
+        )
+        self.assertEqual(
+            normalize_estimate_text(text),
+            {
+                "vendor_name": "Example Painting Co.",
+                "estimate_total": "$2,000.00",
+                "all_money_values": ["$500.00", "$2,000.00"],
+            },
+        )
+
+    def test_normalizes_blue_oak_pdf(self):
+        result = normalize_estimate(
+            QUOTES / "synthetic-painting-estimate-blue-oak.pdf"
+        )
+        self.assertEqual(result["vendor_name"], "Blue Oak Painting Co.")
+        self.assertEqual(result["estimate_total"], "$4,750.00")
+        self.assertIn("$300.00", result["all_money_values"])
+
+    def test_normalizes_inland_pro_pdf(self):
+        result = normalize_estimate(
+            QUOTES / "synthetic-painting-estimate-inland-pro.pdf"
+        )
+        self.assertEqual(result["vendor_name"], "Inland Pro Paint & Repair")
+        self.assertEqual(result["estimate_total"], "$3,890.00")
+        self.assertIn("$220.00", result["all_money_values"])
+
+
+if __name__ == "__main__":
+    unittest.main()

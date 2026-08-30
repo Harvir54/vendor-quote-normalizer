@@ -29,7 +29,13 @@ python -m pip install -e .
 Extract one sample estimate:
 
 ```bash
-quote-normalizer sample-data/quotes/synthetic-painting-estimate-blue-oak.pdf
+python -m app.cli sample-data/quotes/synthetic-painting-estimate-blue-oak.pdf
+```
+
+Produce normalized JSON instead of raw text:
+
+```bash
+python -m app.cli sample-data/quotes/synthetic-painting-estimate-blue-oak.pdf --format json
 ```
 
 Run the tests:
