@@ -9,12 +9,14 @@ from app.pdf_text import (
     find_money_values,
     find_vendor_name,
 )
+from app.scope import ScopeItem, classify_ceilings
 
 
 class NormalizedEstimate(TypedDict):
     vendor_name: str | None
     estimate_total: str | None
     all_money_values: list[str]
+    ceilings: ScopeItem
 
 
 def normalize_estimate_text(text: str) -> NormalizedEstimate:
@@ -23,6 +25,7 @@ def normalize_estimate_text(text: str) -> NormalizedEstimate:
         "vendor_name": find_vendor_name(text),
         "estimate_total": find_estimate_total(text),
         "all_money_values": find_money_values(text),
+        "ceilings": classify_ceilings(text),
     }
 
 
