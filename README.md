@@ -38,6 +38,13 @@ Produce normalized JSON instead of raw text:
 python -m app.cli sample-data/quotes/synthetic-painting-estimate-blue-oak.pdf --format json
 ```
 
+Compare two estimates:
+
+```bash
+python -m app.cli sample-data/quotes/synthetic-painting-estimate-blue-oak.pdf \
+  --compare sample-data/quotes/synthetic-painting-estimate-inland-pro.pdf
+```
+
 Run the tests:
 
 ```bash

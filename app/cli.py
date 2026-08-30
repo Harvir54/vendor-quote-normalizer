@@ -5,6 +5,7 @@ import json
 import sys
 from pathlib import Path
 
+from app.comparison import compare_estimates
 from app.normalizer import normalize_estimate
 from app.pdf_text import PdfExtractionError, extract_pdf_text
 
@@ -26,13 +27,21 @@ def build_parser() -> argparse.ArgumentParser:
         default="text",
         help="Output raw PDF text or normalized JSON (default: text)",
     )
+    parser.add_argument(
+        "--compare",
+        type=Path,
+        metavar="SECOND_PDF",
+        help="Compare the first PDF with a second estimate and output JSON",
+    )
     return parser
 
 
 def main() -> int:
     args = build_parser().parse_args()
     try:
-        if args.format == "json":
+        if args.compare:
+            output = json.dumps(compare_estimates(args.pdf, args.compare), indent=2) + "\n"
+        elif args.format == "json":
             output = json.dumps(normalize_estimate(args.pdf), indent=2) + "\n"
         else:
             output = extract_pdf_text(args.pdf)
