@@ -6,6 +6,7 @@ from app.pdf_text import (
     extract_pdf_text,
     find_estimate_total,
     find_money_values,
+    find_vendor_name,
 )
 
 
@@ -37,6 +38,27 @@ class PdfTextTests(unittest.TestCase):
         )
         self.assertEqual(find_estimate_total(blue_oak), "$4,750.00")
         self.assertEqual(find_estimate_total(inland_pro), "$3,890.00")
+
+    def test_finds_vendor_before_document_label(self):
+        text = "Blue Oak Painting Co.\nESTIMATE\nTotal: $4,750.00"
+        self.assertEqual(find_vendor_name(text), "Blue Oak Painting Co.")
+
+    def test_vendor_label_matching_ignores_case_and_blank_lines(self):
+        text = "Inland Pro Paint & Repair\n\nproposal\n$3,890.00"
+        self.assertEqual(find_vendor_name(text), "Inland Pro Paint & Repair")
+
+    def test_returns_none_when_vendor_heading_is_missing(self):
+        self.assertIsNone(find_vendor_name("No recognizable document heading"))
+
+    def test_finds_vendor_in_both_sample_estimates(self):
+        blue_oak = extract_pdf_text(
+            QUOTES / "synthetic-painting-estimate-blue-oak.pdf"
+        )
+        inland_pro = extract_pdf_text(
+            QUOTES / "synthetic-painting-estimate-inland-pro.pdf"
+        )
+        self.assertEqual(find_vendor_name(blue_oak), "Blue Oak Painting Co.")
+        self.assertEqual(find_vendor_name(inland_pro), "Inland Pro Paint & Repair")
 
     def test_extracts_blue_oak_text(self):
         text = extract_pdf_text(QUOTES / "synthetic-painting-estimate-blue-oak.pdf")

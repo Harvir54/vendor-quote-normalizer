@@ -58,3 +58,15 @@ def find_estimate_total(text: str) -> str | None:
         return match.group(1)
 
     return None
+
+
+def find_vendor_name(text: str) -> str | None:
+    """Return the non-empty line immediately before a document-type heading."""
+    lines = [line.strip() for line in text.splitlines() if line.strip()]
+    document_labels = {"ESTIMATE", "PROPOSAL", "QUOTE"}
+
+    for index, line in enumerate(lines):
+        if line.upper() in document_labels and index > 0:
+            return lines[index - 1]
+
+    return None
