@@ -1,5 +1,6 @@
 """Extract text from digital PDF estimates."""
 
+import re
 from pathlib import Path
 
 from pypdf import PdfReader
@@ -38,3 +39,8 @@ def extract_pdf_text(pdf_path: Path) -> str:
         )
 
     return "\n\n".join(pages) + "\n"
+
+
+def find_money_values(text: str) -> list[str]:
+    money_pattern = r"\$[\d,]+\.\d{2}"
+    return re.findall(money_pattern, text)

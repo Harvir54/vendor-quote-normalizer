@@ -1,7 +1,7 @@
 import unittest
 from pathlib import Path
 
-from app.pdf_text import PdfExtractionError, extract_pdf_text
+from app.pdf_text import PdfExtractionError, extract_pdf_text, find_money_values
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -9,6 +9,13 @@ QUOTES = ROOT / "sample-data" / "quotes"
 
 
 class PdfTextTests(unittest.TestCase):
+    def test_finds_multiple_money_values(self):
+        text = "Repair is $550.00 and the total is $4,750.00"
+        self.assertEqual(find_money_values(text), ["$550.00", "$4,750.00"])
+
+    def test_returns_empty_list_when_no_money_is_found(self):
+        self.assertEqual(find_money_values("No price is listed."), [])
+
     def test_extracts_blue_oak_text(self):
         text = extract_pdf_text(QUOTES / "synthetic-painting-estimate-blue-oak.pdf")
         self.assertIn("Blue Oak Painting Co.", text)
