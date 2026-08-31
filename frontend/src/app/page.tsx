@@ -169,18 +169,28 @@ function FilePicker({
   file: File | null;
   onChange: (file: File | null) => void;
 }) {
+  const inputId = `estimate-${number}`;
+
   return (
-    <label className={`file-picker ${file ? "has-file" : ""}`}>
+    <div className={`file-picker ${file ? "has-file" : ""}`}>
       <span className="file-number">{number}</span>
       <span className="upload-icon" aria-hidden="true">↑</span>
       <strong>{file ? file.name : label}</strong>
-      <span>{file ? `${(file.size / 1024).toFixed(0)} KB` : "Choose a PDF estimate"}</span>
+      <span>
+        {file
+          ? `Selected · ${(file.size / 1024).toFixed(0)} KB`
+          : "Choose a PDF estimate"}
+      </span>
       <input
+        id={inputId}
         type="file"
         accept="application/pdf,.pdf"
         onChange={(event) => onChange(event.target.files?.[0] ?? null)}
       />
-    </label>
+      <label className="select-file-button" htmlFor={inputId}>
+        {file ? "Choose a different PDF" : "Select PDF"}
+      </label>
+    </div>
   );
 }
 
