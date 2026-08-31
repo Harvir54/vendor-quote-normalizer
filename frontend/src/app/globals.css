@@ -48,13 +48,13 @@ button, input { font: inherit; }
 .file-picker { align-items: center; background: #fbfcfa; border: 1.5px dashed #b8c5bf; border-radius: 15px; display: flex; flex-direction: column; min-height: 230px; justify-content: center; padding: 28px; position: relative; text-align: center; transition: .2s ease; }
 .file-picker:hover { background: var(--green-soft); border-color: var(--green); transform: translateY(-2px); }
 .file-picker.has-file { background: var(--green-soft); border-color: #87b5a2; border-style: solid; }
-.file-picker input { height: 1px; opacity: 0; overflow: hidden; position: absolute; width: 1px; }
+.native-file-input { color: var(--muted); cursor: pointer; font-size: 12px; margin-top: 16px; max-width: 100%; }
+.native-file-input::file-selector-button { background: var(--green-dark); border: 0; border-radius: 9px; color: white; cursor: pointer; font-weight: 700; margin-right: 10px; padding: 10px 15px; transition: .2s ease; }
+.native-file-input::file-selector-button:hover { background: #0a382a; }
 .file-picker strong { font-size: 16px; margin: 15px 0 7px; max-width: 90%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .file-picker > span:last-of-type { color: var(--muted); font-size: 13px; }
 .file-number { color: #91a099; font-size: 11px; font-weight: 800; left: 18px; letter-spacing: .1em; position: absolute; top: 17px; }
 .upload-icon { align-items: center; background: white; border: 1px solid var(--line); border-radius: 12px; color: var(--green); display: flex; font-size: 24px; height: 52px; justify-content: center; width: 52px; }
-.select-file-button { background: var(--green-dark); border-radius: 9px; color: white; cursor: pointer; font-size: 13px; font-weight: 700; margin-top: 16px; padding: 10px 15px; transition: .2s ease; }
-.select-file-button:hover { background: #0a382a; transform: translateY(-1px); }
 .compare-button { align-items: center; background: var(--green-dark); border: 0; border-radius: 12px; color: white; cursor: pointer; display: flex; font-weight: 700; gap: 16px; justify-content: center; margin-top: 18px; padding: 16px 22px; transition: .2s ease; width: 100%; }
 .compare-button:hover:not(:disabled) { background: #0a382a; transform: translateY(-1px); }
 .compare-button:disabled { cursor: wait; opacity: .65; }

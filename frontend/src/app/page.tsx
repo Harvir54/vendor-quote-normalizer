@@ -183,13 +183,11 @@ function FilePicker({
       </span>
       <input
         id={inputId}
+        className="native-file-input"
         type="file"
         accept="application/pdf,.pdf"
         onChange={(event) => onChange(event.target.files?.[0] ?? null)}
       />
-      <label className="select-file-button" htmlFor={inputId}>
-        {file ? "Choose a different PDF" : "Select PDF"}
-      </label>
     </div>
   );
 }
