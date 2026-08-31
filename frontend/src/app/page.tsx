@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 
 type ScopeValue = {
   status: "included" | "excluded" | "not_stated" | "unclear";
@@ -50,6 +50,14 @@ export default function Home() {
   const [result, setResult] = useState<Comparison | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (result) {
+      document
+        .getElementById("comparison-results")
+        ?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [result]);
 
   async function submitComparison(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -194,7 +202,7 @@ function FilePicker({
 
 function Results({ result }: { result: Comparison }) {
   return (
-    <section className="results" aria-live="polite">
+    <section className="results" id="comparison-results" aria-live="polite">
       <div className="section-heading">
         <div>
           <span className="eyebrow">Comparison ready</span>
