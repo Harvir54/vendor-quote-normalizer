@@ -22,6 +22,15 @@ from app.flooring_scope import (
     classify_transitions,
     classify_underlayment,
 )
+from app.plumbing_scope import (
+    classify_drain_lines,
+    classify_fixture_installation,
+    classify_materials,
+    classify_permit,
+    classify_shutoff_valves,
+    classify_supply_lines,
+    classify_testing,
+)
 
 
 ScopeClassifier = Callable[[str], ScopeItem]
@@ -126,7 +135,48 @@ FLOORING = TradeProfile(
     ),
 )
 
-TRADE_PROFILES = {profile.key: profile for profile in (PAINTING, FLOORING)}
+PLUMBING = TradeProfile(
+    key="plumbing",
+    label="Plumbing",
+    scope_labels={
+        "fixture_installation": "Fixture installation",
+        "supply_lines": "Supply lines",
+        "drain_lines": "Drain lines",
+        "shutoff_valves": "Shutoff valves",
+        "permit": "Permit and inspection",
+        "materials": "Materials and parts",
+        "testing": "Pressure and leak testing",
+        "cleanup": "Cleanup",
+        "labor_warranty": "Labor warranty",
+    },
+    classifiers={
+        "fixture_installation": classify_fixture_installation,
+        "supply_lines": classify_supply_lines,
+        "drain_lines": classify_drain_lines,
+        "shutoff_valves": classify_shutoff_valves,
+        "permit": classify_permit,
+        "materials": classify_materials,
+        "testing": classify_testing,
+        "cleanup": classify_cleanup,
+        "labor_warranty": classify_labor_warranty,
+    },
+    risk_descriptions={
+        "supply_lines": "supply-line work",
+        "drain_lines": "drain-line work",
+        "shutoff_valves": "shutoff valves",
+        "permit": "permit and inspection costs",
+        "materials": "materials and parts",
+        "testing": "pressure or leak testing",
+        "cleanup": "cleanup",
+        "labor_warranty": "a labor warranty",
+    },
+    ai_review_categories=(
+        "fixture_installation", "supply_lines", "drain_lines", "shutoff_valves",
+        "permit", "materials", "testing", "cleanup", "labor_warranty",
+    ),
+)
+
+TRADE_PROFILES = {profile.key: profile for profile in (PAINTING, FLOORING, PLUMBING)}
 
 
 class UnsupportedTradeError(ValueError):

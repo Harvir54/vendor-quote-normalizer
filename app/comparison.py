@@ -120,6 +120,22 @@ def _risk_flags(
                 "evidence": lower["flooring_installation"]["evidence"],
             })
 
+    if profile.key == "plumbing":
+        first_count = first["fixture_installation"]["fixture_count"]
+        second_count = second["fixture_installation"]["fixture_count"]
+        if first_count and second_count and first_count != second_count:
+            lower = first if first_count < second_count else second
+            flags.append({
+                "code": "FIXTURE_COUNT_MISMATCH",
+                "severity": "high",
+                "vendor_name": lower["vendor_name"],
+                "message": (
+                    f"Prices {min(first_count, second_count)} fixtures, compared with "
+                    f"{max(first_count, second_count)} in the other estimate."
+                ),
+                "evidence": lower["fixture_installation"]["evidence"],
+            })
+
     for field, description in profile.risk_descriptions.items():
         statuses = [estimate[field]["status"] for estimate in estimates]
         for index, estimate in enumerate(estimates):

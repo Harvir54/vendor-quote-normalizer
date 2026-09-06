@@ -14,6 +14,8 @@ type ScopeValue = {
   material_type?: string | null;
   wear_layer_mil?: number | null;
   thickness_mm?: number | null;
+  fixture_count?: number | null;
+  fixture_types?: string[];
 };
 
 type Comparison = {
@@ -75,9 +77,25 @@ const FLOORING_DEMOS = [
   },
 ] as const;
 
+const PLUMBING_DEMOS = [
+  {
+    id: "clearflow-plumbing",
+    name: "ClearFlow Plumbing",
+    path: "/samples/synthetic-plumbing-estimate-clearflow.pdf",
+    filename: "synthetic-plumbing-estimate-clearflow.pdf",
+  },
+  {
+    id: "rapid-rooter",
+    name: "Rapid Rooter Services",
+    path: "/samples/synthetic-plumbing-estimate-rapid.pdf",
+    filename: "synthetic-plumbing-estimate-rapid.pdf",
+  },
+] as const;
+
 const TRADE_OPTIONS = [
   { key: "painting", label: "Interior painting", demos: PAINTING_DEMOS },
   { key: "flooring", label: "Flooring", demos: FLOORING_DEMOS },
+  { key: "plumbing", label: "Plumbing", demos: PLUMBING_DEMOS },
 ] as const;
 
 function formatCents(cents: number | null) {
@@ -98,12 +116,12 @@ export default function Home() {
   const [result, setResult] = useState<Comparison | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [trade, setTrade] = useState<"painting" | "flooring">("painting");
+  const [trade, setTrade] = useState<"painting" | "flooring" | "plumbing">("painting");
   const [firstDemo, setFirstDemo] = useState("blue-oak");
   const [secondDemo, setSecondDemo] = useState("inland-pro");
   const demos = TRADE_OPTIONS.find(({ key }) => key === trade)?.demos ?? PAINTING_DEMOS;
 
-  function changeTrade(nextTrade: "painting" | "flooring") {
+  function changeTrade(nextTrade: "painting" | "flooring" | "plumbing") {
     const nextDemos = TRADE_OPTIONS.find(({ key }) => key === nextTrade)?.demos ?? PAINTING_DEMOS;
     setTrade(nextTrade);
     setFirstDemo(nextDemos[0].id);
@@ -209,7 +227,7 @@ export default function Home() {
           <span className="brand-mark">VQ</span>
           <span>Vendor Quote Normalizer</span>
         </a>
-        <span className="prototype-label">Painting + flooring · Prototype</span>
+        <span className="prototype-label">Painting · Flooring · Plumbing</span>
       </header>
 
       <section className="hero" id="top">
@@ -427,6 +445,9 @@ function ScopeCell({ value }: { value: ScopeValue }) {
       )}
       {value.thickness_mm !== undefined && value.thickness_mm !== null && (
         <small>{value.thickness_mm} mm thickness</small>
+      )}
+      {value.fixture_count !== undefined && value.fixture_count !== null && (
+        <small>{value.fixture_count} fixtures</small>
       )}
       {value.evidence && <details><summary>View evidence</summary><p>{value.evidence}</p></details>}
     </div>

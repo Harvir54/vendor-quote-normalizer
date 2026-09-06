@@ -21,12 +21,13 @@ class TradeProfileTests(unittest.TestCase):
             [
                 {"key": "painting", "label": "Interior painting"},
                 {"key": "flooring", "label": "Flooring"},
+                {"key": "plumbing", "label": "Plumbing"},
             ],
         )
 
     def test_rejects_unknown_trade(self):
         with self.assertRaises(UnsupportedTradeError):
-            get_trade_profile("plumbing")
+            get_trade_profile("roofing")
 
 
 if __name__ == "__main__":
