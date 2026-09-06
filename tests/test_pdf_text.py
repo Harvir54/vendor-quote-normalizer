@@ -26,6 +26,14 @@ class PdfTextTests(unittest.TestCase):
         text = "Repair: $550.00\nESTIMATE TOTAL\n$4,750.00"
         self.assertEqual(find_estimate_total(text), "$4,750.00")
 
+    def test_finds_labeled_proposal_total_after_subtotal_and_discount(self):
+        text = (
+            "Subtotal\n$4,570.00\n"
+            "Customer loyalty discount\n-$170.00\n"
+            "PROPOSAL TOTAL\n$4,400.00"
+        )
+        self.assertEqual(find_estimate_total(text), "$4,400.00")
+
     def test_returns_none_when_total_is_missing(self):
         self.assertIsNone(find_estimate_total("No final price is provided"))
 
@@ -46,6 +54,24 @@ class PdfTextTests(unittest.TestCase):
     def test_vendor_label_matching_ignores_case_and_blank_lines(self):
         text = "Inland Pro Paint & Repair\n\nproposal\n$3,890.00"
         self.assertEqual(find_vendor_name(text), "Inland Pro Paint & Repair")
+
+    def test_vendor_skips_descriptive_subtitle_before_proposal_label(self):
+        text = (
+            "CANYON VIEW COATINGS\n"
+            "Interior repaint proposal | Licensed and insured\n"
+            "PROPOSAL\n"
+            "CV-1048"
+        )
+        self.assertEqual(find_vendor_name(text), "CANYON VIEW COATINGS")
+
+    def test_vendor_skips_other_proposal_subtitles(self):
+        text = (
+            "SUMMIT SURFACE RENEWAL\n"
+            "Residential turnover proposal | Riverside County\n"
+            "PROPOSAL\n"
+            "SSR-2217"
+        )
+        self.assertEqual(find_vendor_name(text), "SUMMIT SURFACE RENEWAL")
 
     def test_returns_none_when_vendor_heading_is_missing(self):
         self.assertIsNone(find_vendor_name("No recognizable document heading"))

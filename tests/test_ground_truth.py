@@ -5,7 +5,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 GROUND_TRUTH = ROOT / "sample-data" / "ground-truth"
-VALID_STATUSES = {"included", "excluded", "not_stated", "unclear"}
+VALID_STATUSES = {"included", "partial", "excluded", "not_stated", "unclear"}
 REQUIRED_CATEGORIES = {
     "surface_protection",
     "drywall_repair",
@@ -26,8 +26,8 @@ class GroundTruthTests(unittest.TestCase):
     def setUp(self):
         self.records = [json.loads(path.read_text()) for path in sorted(GROUND_TRUTH.glob("*.json"))]
 
-    def test_two_fixtures_exist(self):
-        self.assertEqual(len(self.records), 2)
+    def test_four_fixtures_exist(self):
+        self.assertEqual(len(self.records), 4)
 
     def test_source_pdfs_exist(self):
         for record in self.records:

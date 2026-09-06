@@ -1,0 +1,69 @@
+{
+  "schema_version": "1.0",
+  "document": {
+    "fixture_id": "painting-canyon-view-003",
+    "source_file": "../quotes/synthetic-painting-proposal-canyon-view.pdf",
+    "is_synthetic": true,
+    "document_type": "proposal"
+  },
+  "vendor": {
+    "name": "CANYON VIEW COATINGS",
+    "phone": "(951) 555-0184",
+    "email": "proposals@canyonview.example"
+  },
+  "project": {
+    "customer": "Riverside Residential Partners",
+    "address": "4550 Magnolia Ave, Riverside, CA",
+    "property_type": "apartment",
+    "occupancy": "vacant",
+    "bedrooms": 2,
+    "bathrooms": 1,
+    "approximate_square_feet": null,
+    "trade": "interior_painting"
+  },
+  "estimate": {
+    "number": "CV-1048",
+    "issued_date": "2026-08-28",
+    "valid_through": "2026-09-11",
+    "subtotal_cents": 457000,
+    "sales_tax_cents": 0,
+    "total_cents": 440000,
+    "deposit_percent": 30,
+    "duration_working_days": null,
+    "start_timing": null,
+    "warranty": "One-year labor workmanship warranty"
+  },
+  "scope_items": [
+    {"category": "surface_protection", "status": "included", "price_cents": 62000, "evidence": "Protect floors and fixed furnishings."},
+    {"category": "drywall_repair", "status": "included", "price_cents": 62000, "evidence": "Patch ordinary nail holes and minor wall blemishes.", "notes": "Price is combined with surface preparation; water-damaged drywall and texture matching are excluded."},
+    {"category": "primer", "status": "included", "price_cents": 248000, "evidence": "Spot-prime repaired areas", "notes": "Price is combined with wall painting."},
+    {"category": "walls", "status": "included", "price_cents": 248000, "evidence": "apply two finish coats of premium acrylic eggshell to walls"},
+    {"category": "wall_coat_count", "status": "included", "value": 2, "evidence": "apply two finish coats"},
+    {"category": "ceilings", "status": "partial", "price_cents": 26000, "evidence": "Paint the bathroom ceiling only. All other ceilings are excluded from this proposal."},
+    {"category": "trim", "status": "included", "price_cents": 87000, "evidence": "Apply one finish coat to baseboards, door casings, and six interior doors", "notes": "Price is combined with interior doors."},
+    {"category": "interior_doors", "status": "included", "price_cents": 87000, "evidence": "six interior doors", "notes": "Six doors; price is combined with trim."},
+    {"category": "paint_and_materials", "status": "included", "price_cents": null, "evidence": "premium acrylic eggshell", "notes": "Materials are described but not separately priced."},
+    {"category": "cleanup", "status": "included", "price_cents": 34000, "evidence": "Daily housekeeping, final cleanup"},
+    {"category": "debris_disposal", "status": "included", "price_cents": 34000, "evidence": "removal of painting debris from the property", "notes": "Price is combined with project closeout."},
+    {"category": "labor_warranty", "status": "included", "value": "1 year", "evidence": "Labor is warranted for one year against peeling or blistering caused by workmanship."}
+  ],
+  "line_items": [
+    {"description": "Surface preparation", "amount_cents": 62000},
+    {"description": "Walls", "amount_cents": 248000},
+    {"description": "Trim and doors", "amount_cents": 87000},
+    {"description": "Bathroom ceiling allowance", "amount_cents": 26000},
+    {"description": "Project closeout", "amount_cents": 34000},
+    {"description": "Customer loyalty discount", "amount_cents": -17000}
+  ],
+  "exclusions": [
+    "All ceilings except the bathroom ceiling",
+    "Water-damaged drywall",
+    "Texture matching",
+    "Cabinet finishing",
+    "Removal of hazardous coatings",
+    "Moisture intrusion and substrate failure from warranty coverage"
+  ],
+  "risk_flags": [
+    {"code": "CEILINGS_PARTIAL", "severity": "high", "message": "Only the bathroom ceiling is included; all other ceilings are excluded."}
+  ]
+}

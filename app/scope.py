@@ -1,15 +1,19 @@
 """Classify normalized scope items using evidence from estimate text."""
 
 import re
-from typing import Literal, TypedDict
+from typing import Literal, NotRequired, TypedDict
 
 
-ScopeStatus = Literal["included", "excluded", "not_stated", "unclear"]
+ScopeStatus = Literal["included", "partial", "excluded", "not_stated", "unclear"]
+ExtractionSource = Literal["rule", "ai", "human"]
 
 
 class ScopeItem(TypedDict):
     status: ScopeStatus
     evidence: str | None
+    source: NotRequired[ExtractionSource]
+    confidence: NotRequired[float]
+    review_required: NotRequired[bool]
 
 
 class WallScopeItem(ScopeItem):
@@ -147,12 +151,26 @@ def classify_ceilings(text: str) -> ScopeItem:
     if not evidence_options:
         return {"status": "not_stated", "evidence": None}
 
+    exclusion_phrases = ("not included", "excluded", "excluding")
+    included_words = ("paint", "apply", "coat", "included", "includes")
+    has_excluded_scope = any(
+        any(phrase in evidence.lower() for phrase in exclusion_phrases)
+        for evidence in evidence_options
+    )
+    has_included_scope = any(
+        any(word in evidence.lower() for word in included_words)
+        and not any(phrase in evidence.lower() for phrase in exclusion_phrases)
+        for evidence in evidence_options
+    )
+    if has_included_scope and has_excluded_scope:
+        return {
+            "status": "partial",
+            "evidence": " ".join(evidence_options),
+        }
+
     for evidence in evidence_options:
         lowered = evidence.lower()
-        if any(
-            phrase in lowered
-            for phrase in ("not included", "excluded", "excluding")
-        ):
+        if any(phrase in lowered for phrase in exclusion_phrases):
             return {"status": "excluded", "evidence": evidence}
 
     for evidence in evidence_options:
@@ -175,7 +193,7 @@ def classify_ceilings(text: str) -> ScopeItem:
         lowered = evidence.lower()
         if any(
             word in lowered
-            for word in ("paint", "apply", "coat", "included", "includes")
+            for word in included_words
         ):
             return {"status": "included", "evidence": evidence}
 
@@ -390,8 +408,20 @@ def classify_debris_disposal(text: str) -> ScopeItem:
     """Classify debris or waste disposal."""
     return _classify_simple_scope(
         text,
-        r"\bdisposal\b|\bdispose\b|\bhauling\b|\bdebris removal\b",
-        ("legal disposal", "disposal included", "dispose", "hauling", "debris removal"),
+        (
+            r"\bdisposal\b|\bdispose\b|\bhauling\b|\bdebris removal\b|"
+            r"\bremoval of (?:\w+\s+){0,2}debris\b"
+        ),
+        (
+            "legal disposal",
+            "disposal included",
+            "included",
+            "includes",
+            "dispose",
+            "hauling",
+            "debris removal",
+            "removal of",
+        ),
     )
 
 
@@ -399,8 +429,13 @@ def classify_labor_warranty(text: str) -> WarrantyScopeItem:
     """Classify the labor warranty and extract its duration in years."""
     result = _classify_simple_scope(
         text,
-        r"\bwarrant(?:y|ies)\b",
-        ("labor warranty", "workmanship warranty", "warranty included"),
+        r"\bwarrant(?:y|ies|ed)\b",
+        (
+            "labor warranty",
+            "workmanship warranty",
+            "warranty included",
+            "warranted",
+        ),
     )
     evidence = result["evidence"]
     if evidence:

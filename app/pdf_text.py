@@ -48,7 +48,8 @@ def find_money_values(text: str) -> list[str]:
 
 def find_estimate_total(text: str) -> str | None:
     total_pattern = (
-        r"(?:ESTIMATE\s+TOTAL|ESTIMATED\s+TOTAL)\s*"
+        r"(?:ESTIMATE\s+TOTAL|ESTIMATED\s+TOTAL|PROPOSAL\s+TOTAL|"
+        r"QUOTE\s+TOTAL|GRAND\s+TOTAL)\s*"
         r"(\$[\d,]+\.\d{2})"
     )
 
@@ -61,12 +62,28 @@ def find_estimate_total(text: str) -> str | None:
 
 
 def find_vendor_name(text: str) -> str | None:
-    """Return the non-empty line immediately before a document-type heading."""
+    """Return the most likely company line before a document-type heading."""
     lines = [line.strip() for line in text.splitlines() if line.strip()]
     document_labels = {"ESTIMATE", "PROPOSAL", "QUOTE"}
 
+    def is_header_metadata(line: str) -> bool:
+        normalized = line.casefold()
+        return (
+            normalized.startswith("--- page ")
+            or re.fullmatch(r"page\s+\d+(?:\s+of\s+\d+)?", normalized) is not None
+            or "@" in line
+            or "licensed" in normalized
+            or "insured" in normalized
+            or "interior repaint proposal" in normalized
+            or ("proposal" in normalized and "|" in line)
+            or "synthetic fixture" in normalized
+            or "synthetic test document" in normalized
+        )
+
     for index, line in enumerate(lines):
         if line.upper() in document_labels and index > 0:
-            return lines[index - 1]
+            for candidate in reversed(lines[max(0, index - 6) : index]):
+                if not is_header_metadata(candidate):
+                    return candidate
 
     return None

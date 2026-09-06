@@ -3,8 +3,11 @@
 import { FormEvent, useEffect, useState } from "react";
 
 type ScopeValue = {
-  status: "included" | "excluded" | "not_stated" | "unclear";
+  status: "included" | "partial" | "excluded" | "not_stated" | "unclear";
   evidence: string | null;
+  source: "rule" | "ai" | "human";
+  confidence: number;
+  review_required: boolean;
   coat_count?: number | null;
   duration_years?: number | null;
 };
@@ -32,6 +35,27 @@ type Comparison = {
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:8000";
 
+const DEMO_ESTIMATES = [
+  {
+    id: "blue-oak",
+    name: "Blue Oak Painting Co.",
+    path: "/samples/blue-oak.pdf",
+    filename: "synthetic-painting-estimate-blue-oak.pdf",
+  },
+  {
+    id: "inland-pro",
+    name: "Inland Pro Paint & Repair",
+    path: "/samples/inland-pro.pdf",
+    filename: "synthetic-painting-estimate-inland-pro.pdf",
+  },
+  {
+    id: "canyon-view",
+    name: "Canyon View Coatings",
+    path: "/samples/canyon-view.pdf",
+    filename: "synthetic-painting-proposal-canyon-view.pdf",
+  },
+] as const;
+
 function formatCents(cents: number | null) {
   if (cents === null) return "Not available";
   return new Intl.NumberFormat("en-US", {
@@ -50,6 +74,8 @@ export default function Home() {
   const [result, setResult] = useState<Comparison | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [firstDemo, setFirstDemo] = useState("blue-oak");
+  const [secondDemo, setSecondDemo] = useState("inland-pro");
 
   useEffect(() => {
     if (result) {
@@ -58,6 +84,49 @@ export default function Home() {
         ?.scrollIntoView({ behavior: "smooth", block: "start" });
     }
   }, [result]);
+
+  async function loadDemoEstimates() {
+    setError(null);
+    setResult(null);
+
+    if (firstDemo === secondDemo) {
+      setError("Choose two different demo estimates.");
+      return;
+    }
+
+    const firstEstimate = DEMO_ESTIMATES.find(({ id }) => id === firstDemo);
+    const secondEstimate = DEMO_ESTIMATES.find(({ id }) => id === secondDemo);
+    if (!firstEstimate || !secondEstimate) {
+      setError("The selected demo estimates could not be found.");
+      return;
+    }
+
+    const [firstResponse, secondResponse] = await Promise.all([
+      fetch(firstEstimate.path),
+      fetch(secondEstimate.path),
+    ]);
+
+    if (!firstResponse.ok || !secondResponse.ok) {
+      setError("The demo estimates could not be loaded.");
+      return;
+    }
+
+    const [firstBlob, secondBlob] = await Promise.all([
+      firstResponse.blob(),
+      secondResponse.blob(),
+    ]);
+
+    setFirstFile(
+      new File([firstBlob], firstEstimate.filename, {
+        type: "application/pdf",
+      }),
+    );
+    setSecondFile(
+      new File([secondBlob], secondEstimate.filename, {
+        type: "application/pdf",
+      }),
+    );
+  }
 
   async function submitComparison(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -102,15 +171,14 @@ export default function Home() {
           <span className="brand-mark">VQ</span>
           <span>Vendor Quote Normalizer</span>
         </a>
-        <span className="prototype-badge">Private prototype</span>
+        <span className="prototype-label">Interior painting · Prototype</span>
       </header>
 
       <section className="hero" id="top">
-        <div className="eyebrow">Estimate intelligence for property teams</div>
-        <h1>Compare the scope, not just the price.</h1>
+        <h1>Compare contractor estimates</h1>
         <p>
-          Upload two contractor estimates. We normalize the details, expose missing
-          scope, and show the document evidence behind every warning.
+          See price and scope differences side by side, with the original quote
+          language available for every finding.
         </p>
       </section>
 
@@ -118,13 +186,11 @@ export default function Home() {
         <form onSubmit={submitComparison}>
           <div className="upload-grid">
             <FilePicker
-              number="01"
               label="First estimate"
               file={firstFile}
               onChange={setFirstFile}
             />
             <FilePicker
-              number="02"
               label="Second estimate"
               file={secondFile}
               onChange={setSecondFile}
@@ -133,9 +199,49 @@ export default function Home() {
 
           {error && <div className="error-message">{error}</div>}
 
+          <div className="demo-library">
+            <div className="demo-library-heading">
+              <div>
+                <strong>Demo library</strong>
+                <span>Choose two sample bids to explore the comparison.</span>
+              </div>
+              <span className="sample-count">Painting estimates</span>
+            </div>
+            <div className="demo-controls">
+              <label>
+                First demo
+                <select
+                  value={firstDemo}
+                  onChange={(event) => setFirstDemo(event.target.value)}
+                >
+                  {DEMO_ESTIMATES.map((estimate) => (
+                    <option value={estimate.id} key={estimate.id}>
+                      {estimate.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                Second demo
+                <select
+                  value={secondDemo}
+                  onChange={(event) => setSecondDemo(event.target.value)}
+                >
+                  {DEMO_ESTIMATES.map((estimate) => (
+                    <option value={estimate.id} key={estimate.id}>
+                      {estimate.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <button className="demo-button" type="button" onClick={loadDemoEstimates}>
+                Use selected demos
+              </button>
+            </div>
+          </div>
+
           <button className="compare-button" type="submit" disabled={loading}>
             {loading ? "Analyzing estimates..." : "Compare estimates"}
-            <span aria-hidden="true">→</span>
           </button>
           <p className="privacy-note">
             PDFs are processed temporarily and removed after analysis.
@@ -145,48 +251,30 @@ export default function Home() {
 
       {result && <Results result={result} />}
 
-      <section className="principles">
-        <article>
-          <span>01</span>
-          <h2>Evidence first</h2>
-          <p>Every material classification retains the source language.</p>
-        </article>
-        <article>
-          <span>02</span>
-          <h2>No silent assumptions</h2>
-          <p>Missing scope stays “not stated” instead of being guessed.</p>
-        </article>
-        <article>
-          <span>03</span>
-          <h2>Built for decisions</h2>
-          <p>Differences become questions to resolve before approving work.</p>
-        </article>
-      </section>
+      <footer className="site-footer">
+        Vendor Quote Normalizer keeps missing scope marked as not stated.
+      </footer>
     </main>
   );
 }
 
 function FilePicker({
-  number,
   label,
   file,
   onChange,
 }: {
-  number: string;
   label: string;
   file: File | null;
   onChange: (file: File | null) => void;
 }) {
-  const inputId = `estimate-${number}`;
+  const inputId = `estimate-${label.toLowerCase().replaceAll(" ", "-")}`;
 
   return (
     <div className={`file-picker ${file ? "has-file" : ""}`}>
-      <span className="file-number">{number}</span>
-      <span className="upload-icon" aria-hidden="true">↑</span>
-      <strong>{file ? file.name : label}</strong>
+      <strong>{label}</strong>
       <span>
         {file
-          ? `Selected · ${(file.size / 1024).toFixed(0)} KB`
+          ? `${file.name} · ${(file.size / 1024).toFixed(0)} KB`
           : "Choose a PDF estimate"}
       </span>
       <input
@@ -205,8 +293,8 @@ function Results({ result }: { result: Comparison }) {
     <section className="results" id="comparison-results" aria-live="polite">
       <div className="section-heading">
         <div>
-          <span className="eyebrow">Comparison ready</span>
-          <h2>What separates these estimates</h2>
+          <span className="section-kicker">Comparison</span>
+          <h2>Estimate review</h2>
         </div>
         <div className="difference-card">
           <span>Price difference</span>
@@ -266,6 +354,11 @@ function ScopeCell({ value }: { value: ScopeValue }) {
   return (
     <div className="scope-cell">
       <span className={`status ${value.status}`}>{displayStatus(value.status)}</span>
+      <span className={`extraction-meta ${value.review_required ? "review" : ""}`}>
+        {value.review_required
+          ? `Needs review · ${Math.round(value.confidence * 100)}% rule confidence`
+          : `${Math.round(value.confidence * 100)}% confidence · ${value.source} extracted`}
+      </span>
       {value.coat_count !== undefined && value.coat_count !== null && (
         <small>{value.coat_count} coat{value.coat_count === 1 ? "" : "s"}</small>
       )}

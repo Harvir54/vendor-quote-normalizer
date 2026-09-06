@@ -7,6 +7,7 @@ from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.comparison import compare_estimates
+from app.ai_extractor import configured_ai_extractor
 from app.normalizer import normalize_estimate
 from app.pdf_text import PdfExtractionError
 
@@ -29,9 +30,12 @@ app.add_middleware(
 
 
 @app.get("/health")
-def health_check() -> dict[str, str]:
+def health_check() -> dict[str, str | bool]:
     """Confirm that the API server is running."""
-    return {"status": "ok"}
+    return {
+        "status": "ok",
+        "ai_enabled": configured_ai_extractor() is not None,
+    }
 
 
 async def _save_uploaded_pdf(upload: UploadFile) -> Path:
@@ -66,7 +70,7 @@ async def normalize_uploaded_estimate(
     """Normalize one uploaded contractor estimate."""
     temporary_path = await _save_uploaded_pdf(estimate)
     try:
-        return normalize_estimate(temporary_path)
+        return normalize_estimate(temporary_path, configured_ai_extractor())
     except PdfExtractionError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
     finally:
@@ -87,7 +91,7 @@ async def compare_uploaded_estimates(
         raise
 
     try:
-        return compare_estimates(first_path, second_path)
+        return compare_estimates(first_path, second_path, configured_ai_extractor())
     except PdfExtractionError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
     finally:

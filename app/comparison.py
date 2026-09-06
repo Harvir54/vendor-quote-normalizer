@@ -1,9 +1,12 @@
 """Compare normalized contractor estimates and explain material differences."""
 
 from pathlib import Path
-from typing import Any, TypedDict
+from typing import TYPE_CHECKING, Any, TypedDict
 
 from app.normalizer import NormalizedEstimate, normalize_estimate
+
+if TYPE_CHECKING:
+    from app.ai_extractor import AIExtractor
 
 
 class VendorSummary(TypedDict):
@@ -106,6 +109,9 @@ def _risk_flags(
             if status == "excluded":
                 message = f"Explicitly excludes {description}."
                 severity = "high"
+            elif status == "partial":
+                message = f"Includes only part of the requested {description} scope."
+                severity = "high"
             elif status == "not_stated":
                 message = f"Does not clearly state whether {description} is included."
                 severity = "medium"
@@ -163,9 +169,13 @@ def compare_normalized_estimates(
     }
 
 
-def compare_estimates(first_pdf: Path, second_pdf: Path) -> EstimateComparison:
+def compare_estimates(
+    first_pdf: Path,
+    second_pdf: Path,
+    ai_extractor: "AIExtractor | None" = None,
+) -> EstimateComparison:
     """Normalize and compare two contractor estimate PDFs."""
     return compare_normalized_estimates(
-        normalize_estimate(first_pdf),
-        normalize_estimate(second_pdf),
+        normalize_estimate(first_pdf, ai_extractor),
+        normalize_estimate(second_pdf, ai_extractor),
     )

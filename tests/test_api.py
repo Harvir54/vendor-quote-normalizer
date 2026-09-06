@@ -15,7 +15,8 @@ class ApiTests(unittest.TestCase):
     def test_health_check(self):
         response = CLIENT.get("/health")
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json(), {"status": "ok"})
+        self.assertEqual(response.json()["status"], "ok")
+        self.assertIn("ai_enabled", response.json())
 
     def test_normalizes_uploaded_estimate(self):
         path = QUOTES / "synthetic-painting-estimate-blue-oak.pdf"

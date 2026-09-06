@@ -1,7 +1,7 @@
 """Convert contractor estimate PDFs into a consistent data structure."""
 
 from pathlib import Path
-from typing import TypedDict
+from typing import TYPE_CHECKING, TypedDict
 
 from app.pdf_text import (
     extract_pdf_text,
@@ -23,6 +23,9 @@ from app.scope import (
     classify_walls,
 )
 
+if TYPE_CHECKING:
+    from app.ai_extractor import AIExtractor
+
 
 class NormalizedEstimate(TypedDict):
     vendor_name: str | None
@@ -37,9 +40,12 @@ class NormalizedEstimate(TypedDict):
     labor_warranty: WarrantyScopeItem
 
 
-def normalize_estimate_text(text: str) -> NormalizedEstimate:
+def normalize_estimate_text(
+    text: str,
+    ai_extractor: "AIExtractor | None" = None,
+) -> NormalizedEstimate:
     """Extract the currently supported structured fields from quote text."""
-    return {
+    estimate: NormalizedEstimate = {
         "vendor_name": find_vendor_name(text),
         "estimate_total": find_estimate_total(text),
         "all_money_values": find_money_values(text),
@@ -52,7 +58,47 @@ def normalize_estimate_text(text: str) -> NormalizedEstimate:
         "labor_warranty": classify_labor_warranty(text),
     }
 
+    for field in (
+        "ceilings",
+        "walls",
+        "primer",
+        "drywall_repair",
+        "cleanup",
+        "debris_disposal",
+        "labor_warranty",
+    ):
+        item = estimate[field]
+        item["source"] = "rule"
+        item["confidence"] = _rule_confidence(item)
+        item["review_required"] = item["confidence"] < 0.80
 
-def normalize_estimate(pdf_path: Path) -> NormalizedEstimate:
+    if ai_extractor is not None:
+        from app.ai_extractor import AIExtractionUnavailable, apply_ai_review
+
+        try:
+            return apply_ai_review(text, estimate, ai_extractor)
+        except AIExtractionUnavailable:
+            return estimate
+    return estimate
+
+
+def _rule_confidence(item: ScopeItem) -> float:
+    """Score confidence in a rule's classification, not the contractor's work."""
+    status = item["status"]
+    has_evidence = item["evidence"] is not None
+
+    if status in ("included", "excluded"):
+        return 0.95 if has_evidence else 0.80
+    if status == "partial":
+        return 0.90
+    if status == "unclear":
+        return 0.55
+    return 0.90 if has_evidence else 0.70
+
+
+def normalize_estimate(
+    pdf_path: Path,
+    ai_extractor: "AIExtractor | None" = None,
+) -> NormalizedEstimate:
     """Extract PDF text and return its normalized estimate fields."""
-    return normalize_estimate_text(extract_pdf_text(pdf_path))
+    return normalize_estimate_text(extract_pdf_text(pdf_path), ai_extractor)

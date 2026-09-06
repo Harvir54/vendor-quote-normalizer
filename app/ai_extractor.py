@@ -1,0 +1,144 @@
+"""Interpret low-confidence estimate scope using structured model output."""
+
+import os
+from typing import Literal, Protocol
+
+from openai import OpenAI, OpenAIError
+from pydantic import BaseModel, Field
+
+from app.normalizer import NormalizedEstimate
+
+
+ReviewCategory = Literal[
+    "ceilings",
+    "walls",
+    "primer",
+    "drywall_repair",
+    "cleanup",
+    "debris_disposal",
+    "labor_warranty",
+]
+ReviewStatus = Literal["included", "partial", "excluded", "not_stated", "unclear"]
+
+
+class AIClassification(BaseModel):
+    category: ReviewCategory
+    status: ReviewStatus
+    evidence: str | None
+    confidence: float = Field(ge=0, le=1)
+
+
+class AIExtractionBatch(BaseModel):
+    classifications: list[AIClassification]
+
+
+class StructuredResponse(Protocol):
+    output_parsed: AIExtractionBatch | None
+
+
+class AIExtractor(Protocol):
+    def classify(
+        self,
+        estimate_text: str,
+        categories: list[ReviewCategory],
+    ) -> AIExtractionBatch: ...
+
+
+class AIExtractionUnavailable(RuntimeError):
+    """Raised when the optional model service cannot complete a review."""
+
+
+class OpenAIExtractor:
+    """Use the Responses API to classify only rule-flagged scope categories."""
+
+    def __init__(self, client: OpenAI | None = None, model: str | None = None):
+        self.client = client or OpenAI()
+        self.model = model or os.getenv("OPENAI_MODEL", "gpt-5.6")
+
+    def classify(
+        self,
+        estimate_text: str,
+        categories: list[ReviewCategory],
+    ) -> AIExtractionBatch:
+        try:
+            response: StructuredResponse = self.client.responses.parse(
+                model=self.model,
+                input=[
+                    {
+                        "role": "system",
+                        "content": (
+                            "Classify contractor-estimate scope using only the supplied "
+                            "document. Return one result per requested category. Evidence "
+                            "must be an exact contiguous quote from the document. If the "
+                            "document does not support a decision, use not_stated with null "
+                            "evidence. Do not infer promises that are not written."
+                        ),
+                    },
+                    {
+                        "role": "user",
+                        "content": (
+                            f"Requested categories: {', '.join(categories)}\n\n"
+                            f"Estimate text:\n{estimate_text}"
+                        ),
+                    },
+                ],
+                text_format=AIExtractionBatch,
+            )
+        except OpenAIError as exc:
+            raise AIExtractionUnavailable(
+                "AI review is temporarily unavailable; rule results were preserved."
+            ) from exc
+        if response.output_parsed is None:
+            raise ValueError("The model did not return a structured extraction.")
+        return response.output_parsed
+
+
+def configured_ai_extractor() -> OpenAIExtractor | None:
+    """Return an extractor only when the backend process has an API key."""
+    if not os.getenv("OPENAI_API_KEY"):
+        return None
+    return OpenAIExtractor()
+
+
+def apply_ai_review(
+    text: str,
+    estimate: NormalizedEstimate,
+    extractor: AIExtractor,
+) -> NormalizedEstimate:
+    """Replace flagged rule results only after validating model evidence."""
+    categories = [
+        field
+        for field in (
+            "ceilings",
+            "walls",
+            "primer",
+            "drywall_repair",
+            "cleanup",
+            "debris_disposal",
+            "labor_warranty",
+        )
+        if estimate[field]["review_required"]
+    ]
+    if not categories:
+        return estimate
+
+    batch = extractor.classify(text, categories)
+    seen: set[str] = set()
+    for result in batch.classifications:
+        if result.category not in categories or result.category in seen:
+            continue
+        seen.add(result.category)
+
+        evidence_is_valid = result.evidence is None or result.evidence in text
+        absence_is_valid = result.status == "not_stated" and result.evidence is None
+        if not evidence_is_valid or (result.evidence is None and not absence_is_valid):
+            continue
+
+        item = estimate[result.category]
+        item["status"] = result.status
+        item["evidence"] = result.evidence
+        item["source"] = "ai"
+        item["confidence"] = result.confidence
+        item["review_required"] = result.confidence < 0.80
+
+    return estimate

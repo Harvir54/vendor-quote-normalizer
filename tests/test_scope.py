@@ -46,6 +46,14 @@ class CeilingScopeTests(unittest.TestCase):
         self.assertEqual(result["status"], "unclear")
         self.assertEqual(result["evidence"], "Ceilings may be painted if requested.")
 
+    def test_classifies_partial_ceiling_coverage(self):
+        result = classify_ceilings(
+            "Paint the bathroom ceiling only. All other ceilings are excluded."
+        )
+        self.assertEqual(result["status"], "partial")
+        self.assertIn("bathroom ceiling", result["evidence"])
+        self.assertIn("other ceilings", result["evidence"])
+
     def test_classifies_sample_estimates(self):
         blue_oak = extract_pdf_text(
             QUOTES / "synthetic-painting-estimate-blue-oak.pdf"
@@ -211,6 +219,13 @@ class RemainingScopeTests(unittest.TestCase):
             "not_stated",
         )
 
+    def test_disposal_recognizes_removal_of_painting_debris(self):
+        result = classify_debris_disposal(
+            "Final cleanup and removal of painting debris are included."
+        )
+        self.assertEqual(result["status"], "included")
+        self.assertIn("removal of painting debris", result["evidence"])
+
     def test_warranty_status_and_duration(self):
         included = classify_labor_warranty("Two-year labor warranty included.")
         self.assertEqual(included["status"], "included")
@@ -219,6 +234,14 @@ class RemainingScopeTests(unittest.TestCase):
         missing = classify_labor_warranty("Labor warranty is not specified.")
         self.assertEqual(missing["status"], "not_stated")
         self.assertIsNone(missing["duration_years"])
+
+    def test_warranty_recognizes_warranted_wording(self):
+        result = classify_labor_warranty(
+            "Labor is warranted for one year against peeling caused by workmanship."
+        )
+        self.assertEqual(result["status"], "included")
+        self.assertEqual(result["duration_years"], 1)
+        self.assertIn("warranted for one year", result["evidence"])
 
     def test_sample_drywall_repair(self):
         blue = classify_drywall_repair(self.blue_oak)
