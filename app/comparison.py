@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, TypedDict
 
 from app.normalizer import NormalizedEstimate, normalize_estimate
+from app.trades import TradeProfile, get_trade_profile
 
 if TYPE_CHECKING:
     from app.ai_extractor import AIExtractor
@@ -31,17 +32,6 @@ class EstimateComparison(TypedDict):
     risk_flags: list[RiskFlag]
 
 
-SCOPE_LABELS = {
-    "walls": "Walls",
-    "ceilings": "Ceilings",
-    "primer": "Primer",
-    "drywall_repair": "Drywall repair",
-    "cleanup": "Cleanup",
-    "debris_disposal": "Debris disposal",
-    "labor_warranty": "Labor warranty",
-}
-
-
 def money_to_cents(value: str | None) -> int | None:
     """Convert a formatted dollar value such as '$4,750.00' into cents."""
     if value is None:
@@ -54,9 +44,10 @@ def money_to_cents(value: str | None) -> int | None:
 def _scope_matrix(
     first: NormalizedEstimate,
     second: NormalizedEstimate,
+    profile: TradeProfile,
 ) -> dict[str, dict[str, Any]]:
     matrix: dict[str, dict[str, Any]] = {}
-    for field, label in SCOPE_LABELS.items():
+    for field, label in profile.scope_labels.items():
         matrix[field] = {
             "label": label,
             "first": first[field],
@@ -68,12 +59,13 @@ def _scope_matrix(
 def _risk_flags(
     first: NormalizedEstimate,
     second: NormalizedEstimate,
+    profile: TradeProfile,
 ) -> list[RiskFlag]:
     flags: list[RiskFlag] = []
     estimates = (first, second)
 
-    first_coats = first["walls"]["coat_count"]
-    second_coats = second["walls"]["coat_count"]
+    first_coats = first["walls"]["coat_count"] if profile.key == "painting" else None
+    second_coats = second["walls"]["coat_count"] if profile.key == "painting" else None
     if first_coats is not None and second_coats is not None and first_coats != second_coats:
         lower = first if first_coats < second_coats else second
         lower_coats = lower["walls"]["coat_count"]
@@ -91,14 +83,7 @@ def _risk_flags(
             }
         )
 
-    risk_fields = {
-        "ceilings": "ceiling painting",
-        "primer": "primer",
-        "cleanup": "cleanup",
-        "debris_disposal": "debris disposal",
-        "labor_warranty": "a labor warranty",
-    }
-    for field, description in risk_fields.items():
+    for field, description in profile.risk_descriptions.items():
         statuses = [estimate[field]["status"] for estimate in estimates]
         for index, estimate in enumerate(estimates):
             status = statuses[index]
@@ -135,8 +120,10 @@ def _risk_flags(
 def compare_normalized_estimates(
     first: NormalizedEstimate,
     second: NormalizedEstimate,
+    trade: str = "painting",
 ) -> EstimateComparison:
     """Return a side-by-side comparison of two normalized estimates."""
+    profile = get_trade_profile(trade)
     first_cents = money_to_cents(first["estimate_total"])
     second_cents = money_to_cents(second["estimate_total"])
 
@@ -164,8 +151,8 @@ def compare_normalized_estimates(
         ],
         "price_difference_cents": price_difference_cents,
         "lower_bidder": lower_bidder,
-        "scope_comparison": _scope_matrix(first, second),
-        "risk_flags": _risk_flags(first, second),
+        "scope_comparison": _scope_matrix(first, second, profile),
+        "risk_flags": _risk_flags(first, second, profile),
     }
 
 
@@ -173,9 +160,11 @@ def compare_estimates(
     first_pdf: Path,
     second_pdf: Path,
     ai_extractor: "AIExtractor | None" = None,
+    trade: str = "painting",
 ) -> EstimateComparison:
     """Normalize and compare two contractor estimate PDFs."""
     return compare_normalized_estimates(
-        normalize_estimate(first_pdf, ai_extractor),
-        normalize_estimate(second_pdf, ai_extractor),
+        normalize_estimate(first_pdf, ai_extractor, trade),
+        normalize_estimate(second_pdf, ai_extractor, trade),
+        trade,
     )

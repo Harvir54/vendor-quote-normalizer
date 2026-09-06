@@ -17,6 +17,10 @@ class ApiTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["status"], "ok")
         self.assertIn("ai_enabled", response.json())
+        self.assertEqual(
+            response.json()["supported_trades"],
+            [{"key": "painting", "label": "Interior painting"}],
+        )
 
     def test_normalizes_uploaded_estimate(self):
         path = QUOTES / "synthetic-painting-estimate-blue-oak.pdf"
@@ -53,6 +57,17 @@ class ApiTests(unittest.TestCase):
         )
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.json()["detail"], "Only PDF files are supported.")
+
+    def test_rejects_unsupported_trade(self):
+        path = QUOTES / "synthetic-painting-estimate-blue-oak.pdf"
+        with path.open("rb") as pdf:
+            response = CLIENT.post(
+                "/estimates/normalize",
+                data={"trade": "roofing"},
+                files={"estimate": (path.name, pdf, "application/pdf")},
+            )
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("Unsupported trade 'roofing'", response.json()["detail"])
 
 
 if __name__ == "__main__":

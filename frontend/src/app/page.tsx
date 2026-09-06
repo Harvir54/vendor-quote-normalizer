@@ -140,6 +140,7 @@ export default function Home() {
     setResult(null);
 
     const formData = new FormData();
+    formData.append("trade", "painting");
     formData.append("first_estimate", firstFile);
     formData.append("second_estimate", secondFile);
 

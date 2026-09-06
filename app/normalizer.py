@@ -1,7 +1,7 @@
 """Convert contractor estimate PDFs into a consistent data structure."""
 
 from pathlib import Path
-from typing import TYPE_CHECKING, TypedDict
+from typing import TYPE_CHECKING, TypedDict, cast
 
 from app.pdf_text import (
     extract_pdf_text,
@@ -9,19 +9,8 @@ from app.pdf_text import (
     find_money_values,
     find_vendor_name,
 )
-from app.scope import (
-    RepairScopeItem,
-    ScopeItem,
-    WallScopeItem,
-    WarrantyScopeItem,
-    classify_ceilings,
-    classify_cleanup,
-    classify_debris_disposal,
-    classify_drywall_repair,
-    classify_labor_warranty,
-    classify_primer,
-    classify_walls,
-)
+from app.scope import RepairScopeItem, ScopeItem, WallScopeItem, WarrantyScopeItem
+from app.trades import get_trade_profile
 
 if TYPE_CHECKING:
     from app.ai_extractor import AIExtractor
@@ -43,30 +32,21 @@ class NormalizedEstimate(TypedDict):
 def normalize_estimate_text(
     text: str,
     ai_extractor: "AIExtractor | None" = None,
+    trade: str = "painting",
 ) -> NormalizedEstimate:
     """Extract the currently supported structured fields from quote text."""
-    estimate: NormalizedEstimate = {
+    profile = get_trade_profile(trade)
+    estimate = cast(NormalizedEstimate, {
         "vendor_name": find_vendor_name(text),
         "estimate_total": find_estimate_total(text),
         "all_money_values": find_money_values(text),
-        "ceilings": classify_ceilings(text),
-        "walls": classify_walls(text),
-        "primer": classify_primer(text),
-        "drywall_repair": classify_drywall_repair(text),
-        "cleanup": classify_cleanup(text),
-        "debris_disposal": classify_debris_disposal(text),
-        "labor_warranty": classify_labor_warranty(text),
-    }
+        **{
+            field: classifier(text)
+            for field, classifier in profile.classifiers.items()
+        },
+    })
 
-    for field in (
-        "ceilings",
-        "walls",
-        "primer",
-        "drywall_repair",
-        "cleanup",
-        "debris_disposal",
-        "labor_warranty",
-    ):
+    for field in profile.scope_labels:
         item = estimate[field]
         item["source"] = "rule"
         item["confidence"] = _rule_confidence(item)
@@ -76,7 +56,12 @@ def normalize_estimate_text(
         from app.ai_extractor import AIExtractionUnavailable, apply_ai_review
 
         try:
-            return apply_ai_review(text, estimate, ai_extractor)
+            return apply_ai_review(
+                text,
+                estimate,
+                ai_extractor,
+                profile.ai_review_categories,
+            )
         except AIExtractionUnavailable:
             return estimate
     return estimate
@@ -99,6 +84,7 @@ def _rule_confidence(item: ScopeItem) -> float:
 def normalize_estimate(
     pdf_path: Path,
     ai_extractor: "AIExtractor | None" = None,
+    trade: str = "painting",
 ) -> NormalizedEstimate:
     """Extract PDF text and return its normalized estimate fields."""
-    return normalize_estimate_text(extract_pdf_text(pdf_path), ai_extractor)
+    return normalize_estimate_text(extract_pdf_text(pdf_path), ai_extractor, trade)

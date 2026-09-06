@@ -8,6 +8,7 @@ from pathlib import Path
 from app.comparison import compare_estimates
 from app.normalizer import normalize_estimate
 from app.pdf_text import PdfExtractionError, extract_pdf_text
+from app.trades import TRADE_PROFILES
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -33,6 +34,12 @@ def build_parser() -> argparse.ArgumentParser:
         metavar="SECOND_PDF",
         help="Compare the first PDF with a second estimate and output JSON",
     )
+    parser.add_argument(
+        "--trade",
+        choices=tuple(TRADE_PROFILES),
+        default="painting",
+        help="Trade profile used for normalization (default: painting)",
+    )
     return parser
 
 
@@ -40,9 +47,15 @@ def main() -> int:
     args = build_parser().parse_args()
     try:
         if args.compare:
-            output = json.dumps(compare_estimates(args.pdf, args.compare), indent=2) + "\n"
+            output = json.dumps(
+                compare_estimates(args.pdf, args.compare, trade=args.trade),
+                indent=2,
+            ) + "\n"
         elif args.format == "json":
-            output = json.dumps(normalize_estimate(args.pdf), indent=2) + "\n"
+            output = json.dumps(
+                normalize_estimate(args.pdf, trade=args.trade),
+                indent=2,
+            ) + "\n"
         else:
             output = extract_pdf_text(args.pdf)
     except PdfExtractionError as exc:

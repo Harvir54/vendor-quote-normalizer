@@ -3,13 +3,14 @@
 from pathlib import Path
 from tempfile import NamedTemporaryFile
 
-from fastapi import FastAPI, File, HTTPException, UploadFile
+from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.comparison import compare_estimates
 from app.ai_extractor import configured_ai_extractor
 from app.normalizer import normalize_estimate
 from app.pdf_text import PdfExtractionError
+from app.trades import UnsupportedTradeError, get_trade_profile, supported_trades
 
 
 MAX_FILE_SIZE = 10 * 1024 * 1024
@@ -30,11 +31,12 @@ app.add_middleware(
 
 
 @app.get("/health")
-def health_check() -> dict[str, str | bool]:
+def health_check() -> dict[str, object]:
     """Confirm that the API server is running."""
     return {
         "status": "ok",
         "ai_enabled": configured_ai_extractor() is not None,
+        "supported_trades": supported_trades(),
     }
 
 
@@ -66,11 +68,20 @@ def _delete_temporary_files(*paths: Path) -> None:
 @app.post("/estimates/normalize")
 async def normalize_uploaded_estimate(
     estimate: UploadFile = File(...),
+    trade: str = Form("painting"),
 ) -> dict:
     """Normalize one uploaded contractor estimate."""
+    try:
+        get_trade_profile(trade)
+    except UnsupportedTradeError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
     temporary_path = await _save_uploaded_pdf(estimate)
     try:
-        return normalize_estimate(temporary_path, configured_ai_extractor())
+        return normalize_estimate(
+            temporary_path,
+            configured_ai_extractor(),
+            trade,
+        )
     except PdfExtractionError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
     finally:
@@ -81,8 +92,13 @@ async def normalize_uploaded_estimate(
 async def compare_uploaded_estimates(
     first_estimate: UploadFile = File(...),
     second_estimate: UploadFile = File(...),
+    trade: str = Form("painting"),
 ) -> dict:
     """Normalize and compare two uploaded contractor estimates."""
+    try:
+        get_trade_profile(trade)
+    except UnsupportedTradeError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
     first_path = await _save_uploaded_pdf(first_estimate)
     try:
         second_path = await _save_uploaded_pdf(second_estimate)
@@ -91,7 +107,12 @@ async def compare_uploaded_estimates(
         raise
 
     try:
-        return compare_estimates(first_path, second_path, configured_ai_extractor())
+        return compare_estimates(
+            first_path,
+            second_path,
+            configured_ai_extractor(),
+            trade,
+        )
     except PdfExtractionError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
     finally:

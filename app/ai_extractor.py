@@ -1,7 +1,7 @@
 """Interpret low-confidence estimate scope using structured model output."""
 
 import os
-from typing import Literal, Protocol
+from typing import Literal, Protocol, cast
 
 from openai import OpenAI, OpenAIError
 from pydantic import BaseModel, Field
@@ -104,19 +104,20 @@ def apply_ai_review(
     text: str,
     estimate: NormalizedEstimate,
     extractor: AIExtractor,
+    review_categories: tuple[str, ...] = (
+        "ceilings",
+        "walls",
+        "primer",
+        "drywall_repair",
+        "cleanup",
+        "debris_disposal",
+        "labor_warranty",
+    ),
 ) -> NormalizedEstimate:
     """Replace flagged rule results only after validating model evidence."""
     categories = [
-        field
-        for field in (
-            "ceilings",
-            "walls",
-            "primer",
-            "drywall_repair",
-            "cleanup",
-            "debris_disposal",
-            "labor_warranty",
-        )
+        cast(ReviewCategory, field)
+        for field in review_categories
         if estimate[field]["review_required"]
     ]
     if not categories:
