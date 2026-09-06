@@ -14,6 +14,8 @@ class VendorSummary(TypedDict):
     vendor_name: str | None
     estimate_total: str | None
     total_cents: int | None
+    unit_price_cents: int | None
+    unit_label: str | None
 
 
 class RiskFlag(TypedDict):
@@ -63,6 +65,25 @@ def _risk_flags(
 ) -> list[RiskFlag]:
     flags: list[RiskFlag] = []
     estimates = (first, second)
+
+    first_warranty = first["labor_warranty"].get("duration_years")
+    second_warranty = second["labor_warranty"].get("duration_years")
+    if (
+        first_warranty is not None
+        and second_warranty is not None
+        and first_warranty != second_warranty
+    ):
+        shorter = first if first_warranty < second_warranty else second
+        flags.append({
+            "code": "SHORTER_LABOR_WARRANTY",
+            "severity": "medium",
+            "vendor_name": shorter["vendor_name"],
+            "message": (
+                f"Includes a {min(first_warranty, second_warranty)}-year labor warranty, "
+                f"compared with {max(first_warranty, second_warranty)} years in the other estimate."
+            ),
+            "evidence": shorter["labor_warranty"]["evidence"],
+        })
 
     first_coats = first["walls"]["coat_count"] if profile.key == "painting" else None
     second_coats = second["walls"]["coat_count"] if profile.key == "painting" else None
@@ -170,6 +191,29 @@ def _risk_flags(
     return flags
 
 
+def _unit_price(
+    estimate: NormalizedEstimate,
+    total_cents: int | None,
+    trade: str,
+) -> tuple[int | None, str | None]:
+    """Return a comparable unit price when the trade has a reliable quantity."""
+    if total_cents is None:
+        return None, None
+
+    quantity = None
+    label = None
+    if trade == "flooring":
+        quantity = estimate["flooring_installation"]["area_sq_ft"]
+        label = "per sq ft"
+    elif trade == "plumbing":
+        quantity = estimate["fixture_installation"]["fixture_count"]
+        label = "per fixture"
+
+    if not quantity:
+        return None, None
+    return round(total_cents / quantity), label
+
+
 def compare_normalized_estimates(
     first: NormalizedEstimate,
     second: NormalizedEstimate,
@@ -189,17 +233,24 @@ def compare_normalized_estimates(
         elif second_cents < first_cents:
             lower_bidder = second["vendor_name"]
 
+    first_unit_price, first_unit_label = _unit_price(first, first_cents, trade)
+    second_unit_price, second_unit_label = _unit_price(second, second_cents, trade)
+
     return {
         "vendors": [
             {
                 "vendor_name": first["vendor_name"],
                 "estimate_total": first["estimate_total"],
                 "total_cents": first_cents,
+                "unit_price_cents": first_unit_price,
+                "unit_label": first_unit_label,
             },
             {
                 "vendor_name": second["vendor_name"],
                 "estimate_total": second["estimate_total"],
                 "total_cents": second_cents,
+                "unit_price_cents": second_unit_price,
+                "unit_label": second_unit_label,
             },
         ],
         "price_difference_cents": price_difference_cents,

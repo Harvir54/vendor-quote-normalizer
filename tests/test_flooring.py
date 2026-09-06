@@ -45,6 +45,10 @@ class FlooringTests(unittest.TestCase):
         self.assertIn("LOWER_WEAR_LAYER", codes)
         self.assertIn("EXISTING_FLOOR_REMOVAL_EXCLUDED", codes)
         self.assertIn("SUBFLOOR_PREPARATION_UNCLEAR", codes)
+        self.assertIn("SHORTER_LABOR_WARRANTY", codes)
+        self.assertEqual(comparison["vendors"][0]["unit_price_cents"], 720)
+        self.assertEqual(comparison["vendors"][1]["unit_price_cents"], 650)
+        self.assertEqual(comparison["vendors"][0]["unit_label"], "per sq ft")
 
 
 if __name__ == "__main__":

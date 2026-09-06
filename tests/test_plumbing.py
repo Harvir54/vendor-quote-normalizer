@@ -36,6 +36,10 @@ class PlumbingTests(unittest.TestCase):
         self.assertIn("FIXTURE_COUNT_MISMATCH", codes)
         self.assertIn("DRAIN_LINES_EXCLUDED", codes)
         self.assertIn("PERMIT_EXCLUDED", codes)
+        self.assertIn("SHORTER_LABOR_WARRANTY", codes)
+        self.assertEqual(comparison["vendors"][0]["unit_price_cents"], 124500)
+        self.assertEqual(comparison["vendors"][1]["unit_price_cents"], 130000)
+        self.assertEqual(comparison["vendors"][0]["unit_label"], "per fixture")
 
 
 if __name__ == "__main__":

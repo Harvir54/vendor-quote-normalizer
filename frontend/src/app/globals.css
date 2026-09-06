@@ -234,6 +234,7 @@ button, input, select { font: inherit; }
 .vendor-card span { color: var(--muted); font-size: 11px; font-weight: 700; }
 .vendor-card h3 { font-size: 16px; margin: 9px 0 20px; }
 .vendor-card > strong { font-size: 25px; }
+.vendor-card .unit-price { color: var(--muted); display: block; font-size: 11px; margin-top: 7px; }
 .results-panel { background: white; border: 1px solid var(--line); margin-top: 14px; overflow: hidden; padding: 20px; }
 .results-panel > h3 { font-size: 17px; margin: 0 0 16px; }
 .scope-table { border: 1px solid var(--line); overflow: hidden; }

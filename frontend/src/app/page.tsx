@@ -23,6 +23,8 @@ type Comparison = {
     vendor_name: string | null;
     estimate_total: string | null;
     total_cents: number | null;
+    unit_price_cents: number | null;
+    unit_label: string | null;
   }>;
   price_difference_cents: number | null;
   lower_bidder: string | null;
@@ -470,6 +472,11 @@ function Results({
             <span>Estimate {index + 1}</span>
             <h3>{vendor.vendor_name ?? "Unknown vendor"}</h3>
             <strong>{vendor.estimate_total ?? "Total not found"}</strong>
+            {vendor.unit_price_cents !== null && vendor.unit_label && (
+              <small className="unit-price">
+                {formatCents(vendor.unit_price_cents)} {vendor.unit_label}
+              </small>
+            )}
           </article>
         ))}
       </div>
