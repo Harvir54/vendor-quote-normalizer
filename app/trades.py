@@ -13,6 +13,15 @@ from app.scope import (
     classify_primer,
     classify_walls,
 )
+from app.flooring_scope import (
+    classify_baseboards,
+    classify_existing_floor_removal,
+    classify_flooring_installation,
+    classify_moisture_barrier,
+    classify_subfloor_preparation,
+    classify_transitions,
+    classify_underlayment,
+)
 
 
 ScopeClassifier = Callable[[str], ScopeItem]
@@ -69,7 +78,55 @@ PAINTING = TradeProfile(
     ),
 )
 
-TRADE_PROFILES = {PAINTING.key: PAINTING}
+FLOORING = TradeProfile(
+    key="flooring",
+    label="Flooring",
+    scope_labels={
+        "flooring_installation": "Flooring installation",
+        "existing_floor_removal": "Existing floor removal",
+        "subfloor_preparation": "Subfloor preparation",
+        "underlayment": "Underlayment",
+        "moisture_barrier": "Moisture barrier",
+        "transitions": "Transitions",
+        "baseboards": "Baseboards",
+        "cleanup": "Cleanup",
+        "labor_warranty": "Labor warranty",
+    },
+    classifiers={
+        "flooring_installation": classify_flooring_installation,
+        "existing_floor_removal": classify_existing_floor_removal,
+        "subfloor_preparation": classify_subfloor_preparation,
+        "underlayment": classify_underlayment,
+        "moisture_barrier": classify_moisture_barrier,
+        "transitions": classify_transitions,
+        "baseboards": classify_baseboards,
+        "cleanup": classify_cleanup,
+        "labor_warranty": classify_labor_warranty,
+    },
+    risk_descriptions={
+        "existing_floor_removal": "existing floor removal",
+        "subfloor_preparation": "subfloor preparation",
+        "underlayment": "underlayment",
+        "moisture_barrier": "a moisture barrier",
+        "transitions": "transition pieces",
+        "baseboards": "baseboard work",
+        "cleanup": "cleanup",
+        "labor_warranty": "a labor warranty",
+    },
+    ai_review_categories=(
+        "flooring_installation",
+        "existing_floor_removal",
+        "subfloor_preparation",
+        "underlayment",
+        "moisture_barrier",
+        "transitions",
+        "baseboards",
+        "cleanup",
+        "labor_warranty",
+    ),
+)
+
+TRADE_PROFILES = {profile.key: profile for profile in (PAINTING, FLOORING)}
 
 
 class UnsupportedTradeError(ValueError):

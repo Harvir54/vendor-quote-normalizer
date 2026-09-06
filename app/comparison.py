@@ -83,6 +83,43 @@ def _risk_flags(
             }
         )
 
+    if profile.key == "flooring":
+        first_install = first["flooring_installation"]
+        second_install = second["flooring_installation"]
+        first_area = first_install["area_sq_ft"]
+        second_area = second_install["area_sq_ft"]
+        if first_area and second_area and first_area != second_area:
+            lower = first if first_area < second_area else second
+            lower_area = min(first_area, second_area)
+            higher_area = max(first_area, second_area)
+            flags.append({
+                "code": "FLOOR_AREA_MISMATCH",
+                "severity": "high",
+                "vendor_name": lower["vendor_name"],
+                "message": (
+                    f"Prices {lower_area:,} sq ft, compared with {higher_area:,} sq ft "
+                    "in the other estimate. Confirm both bids cover the same area."
+                ),
+                "evidence": lower_install["evidence"] if (
+                    lower_install := lower["flooring_installation"]
+                ) else None,
+            })
+
+        first_wear = first_install["wear_layer_mil"]
+        second_wear = second_install["wear_layer_mil"]
+        if first_wear and second_wear and first_wear != second_wear:
+            lower = first if first_wear < second_wear else second
+            flags.append({
+                "code": "LOWER_WEAR_LAYER",
+                "severity": "high",
+                "vendor_name": lower["vendor_name"],
+                "message": (
+                    f"Specifies a {min(first_wear, second_wear)} mil wear layer, compared "
+                    f"with {max(first_wear, second_wear)} mil in the other estimate."
+                ),
+                "evidence": lower["flooring_installation"]["evidence"],
+            })
+
     for field, description in profile.risk_descriptions.items():
         statuses = [estimate[field]["status"] for estimate in estimates]
         for index, estimate in enumerate(estimates):

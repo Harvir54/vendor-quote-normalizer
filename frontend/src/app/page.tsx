@@ -10,6 +10,10 @@ type ScopeValue = {
   review_required: boolean;
   coat_count?: number | null;
   duration_years?: number | null;
+  area_sq_ft?: number | null;
+  material_type?: string | null;
+  wear_layer_mil?: number | null;
+  thickness_mm?: number | null;
 };
 
 type Comparison = {
@@ -35,7 +39,7 @@ type Comparison = {
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:8000";
 
-const DEMO_ESTIMATES = [
+const PAINTING_DEMOS = [
   {
     id: "blue-oak",
     name: "Blue Oak Painting Co.",
@@ -56,6 +60,26 @@ const DEMO_ESTIMATES = [
   },
 ] as const;
 
+const FLOORING_DEMOS = [
+  {
+    id: "pacific-floorworks",
+    name: "Pacific Floorworks",
+    path: "/samples/synthetic-flooring-estimate-pacific.pdf",
+    filename: "synthetic-flooring-estimate-pacific.pdf",
+  },
+  {
+    id: "valley-flooring",
+    name: "Valley Flooring Group",
+    path: "/samples/synthetic-flooring-estimate-valley.pdf",
+    filename: "synthetic-flooring-estimate-valley.pdf",
+  },
+] as const;
+
+const TRADE_OPTIONS = [
+  { key: "painting", label: "Interior painting", demos: PAINTING_DEMOS },
+  { key: "flooring", label: "Flooring", demos: FLOORING_DEMOS },
+] as const;
+
 function formatCents(cents: number | null) {
   if (cents === null) return "Not available";
   return new Intl.NumberFormat("en-US", {
@@ -74,8 +98,21 @@ export default function Home() {
   const [result, setResult] = useState<Comparison | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [trade, setTrade] = useState<"painting" | "flooring">("painting");
   const [firstDemo, setFirstDemo] = useState("blue-oak");
   const [secondDemo, setSecondDemo] = useState("inland-pro");
+  const demos = TRADE_OPTIONS.find(({ key }) => key === trade)?.demos ?? PAINTING_DEMOS;
+
+  function changeTrade(nextTrade: "painting" | "flooring") {
+    const nextDemos = TRADE_OPTIONS.find(({ key }) => key === nextTrade)?.demos ?? PAINTING_DEMOS;
+    setTrade(nextTrade);
+    setFirstDemo(nextDemos[0].id);
+    setSecondDemo(nextDemos[1].id);
+    setFirstFile(null);
+    setSecondFile(null);
+    setResult(null);
+    setError(null);
+  }
 
   useEffect(() => {
     if (result) {
@@ -94,8 +131,8 @@ export default function Home() {
       return;
     }
 
-    const firstEstimate = DEMO_ESTIMATES.find(({ id }) => id === firstDemo);
-    const secondEstimate = DEMO_ESTIMATES.find(({ id }) => id === secondDemo);
+    const firstEstimate = demos.find(({ id }) => id === firstDemo);
+    const secondEstimate = demos.find(({ id }) => id === secondDemo);
     if (!firstEstimate || !secondEstimate) {
       setError("The selected demo estimates could not be found.");
       return;
@@ -140,7 +177,7 @@ export default function Home() {
     setResult(null);
 
     const formData = new FormData();
-    formData.append("trade", "painting");
+    formData.append("trade", trade);
     formData.append("first_estimate", firstFile);
     formData.append("second_estimate", secondFile);
 
@@ -172,7 +209,7 @@ export default function Home() {
           <span className="brand-mark">VQ</span>
           <span>Vendor Quote Normalizer</span>
         </a>
-        <span className="prototype-label">Interior painting · Prototype</span>
+        <span className="prototype-label">Painting + flooring · Prototype</span>
       </header>
 
       <section className="hero" id="top">
@@ -185,6 +222,19 @@ export default function Home() {
 
       <section className="workspace" aria-label="Estimate comparison workspace">
         <form onSubmit={submitComparison}>
+          <div className="trade-selector" role="group" aria-label="Estimate category">
+            <span>Estimate category</span>
+            {TRADE_OPTIONS.map((option) => (
+              <button
+                className={trade === option.key ? "active" : ""}
+                key={option.key}
+                type="button"
+                onClick={() => changeTrade(option.key)}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
           <div className="upload-grid">
             <FilePicker
               label="First estimate"
@@ -206,7 +256,9 @@ export default function Home() {
                 <strong>Demo library</strong>
                 <span>Choose two sample bids to explore the comparison.</span>
               </div>
-              <span className="sample-count">Painting estimates</span>
+              <span className="sample-count">
+                {TRADE_OPTIONS.find(({ key }) => key === trade)?.label} estimates
+              </span>
             </div>
             <div className="demo-controls">
               <label>
@@ -215,7 +267,7 @@ export default function Home() {
                   value={firstDemo}
                   onChange={(event) => setFirstDemo(event.target.value)}
                 >
-                  {DEMO_ESTIMATES.map((estimate) => (
+                  {demos.map((estimate) => (
                     <option value={estimate.id} key={estimate.id}>
                       {estimate.name}
                     </option>
@@ -228,7 +280,7 @@ export default function Home() {
                   value={secondDemo}
                   onChange={(event) => setSecondDemo(event.target.value)}
                 >
-                  {DEMO_ESTIMATES.map((estimate) => (
+                  {demos.map((estimate) => (
                     <option value={estimate.id} key={estimate.id}>
                       {estimate.name}
                     </option>
@@ -365,6 +417,16 @@ function ScopeCell({ value }: { value: ScopeValue }) {
       )}
       {value.duration_years !== undefined && value.duration_years !== null && (
         <small>{value.duration_years}-year term</small>
+      )}
+      {value.area_sq_ft !== undefined && value.area_sq_ft !== null && (
+        <small>{value.area_sq_ft.toLocaleString()} sq ft</small>
+      )}
+      {value.material_type && <small>{value.material_type}</small>}
+      {value.wear_layer_mil !== undefined && value.wear_layer_mil !== null && (
+        <small>{value.wear_layer_mil} mil wear layer</small>
+      )}
+      {value.thickness_mm !== undefined && value.thickness_mm !== null && (
+        <small>{value.thickness_mm} mm thickness</small>
       )}
       {value.evidence && <details><summary>View evidence</summary><p>{value.evidence}</p></details>}
     </div>

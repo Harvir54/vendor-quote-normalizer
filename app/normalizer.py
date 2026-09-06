@@ -1,7 +1,7 @@
 """Convert contractor estimate PDFs into a consistent data structure."""
 
 from pathlib import Path
-from typing import TYPE_CHECKING, TypedDict, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from app.pdf_text import (
     extract_pdf_text,
@@ -9,24 +9,14 @@ from app.pdf_text import (
     find_money_values,
     find_vendor_name,
 )
-from app.scope import RepairScopeItem, ScopeItem, WallScopeItem, WarrantyScopeItem
+from app.scope import ScopeItem
 from app.trades import get_trade_profile
 
 if TYPE_CHECKING:
     from app.ai_extractor import AIExtractor
 
 
-class NormalizedEstimate(TypedDict):
-    vendor_name: str | None
-    estimate_total: str | None
-    all_money_values: list[str]
-    ceilings: ScopeItem
-    walls: WallScopeItem
-    primer: ScopeItem
-    drywall_repair: RepairScopeItem
-    cleanup: ScopeItem
-    debris_disposal: ScopeItem
-    labor_warranty: WarrantyScopeItem
+NormalizedEstimate = dict[str, Any]
 
 
 def normalize_estimate_text(

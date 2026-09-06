@@ -19,7 +19,10 @@ class ApiTests(unittest.TestCase):
         self.assertIn("ai_enabled", response.json())
         self.assertEqual(
             response.json()["supported_trades"],
-            [{"key": "painting", "label": "Interior painting"}],
+            [
+                {"key": "painting", "label": "Interior painting"},
+                {"key": "flooring", "label": "Flooring"},
+            ],
         )
 
     def test_normalizes_uploaded_estimate(self):

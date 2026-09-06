@@ -17,6 +17,13 @@ ReviewCategory = Literal[
     "cleanup",
     "debris_disposal",
     "labor_warranty",
+    "flooring_installation",
+    "existing_floor_removal",
+    "subfloor_preparation",
+    "underlayment",
+    "moisture_barrier",
+    "transitions",
+    "baseboards",
 ]
 ReviewStatus = Literal["included", "partial", "excluded", "not_stated", "unclear"]
 

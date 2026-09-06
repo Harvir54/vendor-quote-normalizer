@@ -86,6 +86,25 @@ button, input, select { font: inherit; }
   border: 1px solid var(--line);
   padding: 22px;
 }
+.trade-selector {
+  align-items: center;
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  gap: 7px;
+  margin-bottom: 18px;
+  padding-bottom: 16px;
+}
+.trade-selector > span { color: var(--muted); font-size: 11px; font-weight: 700; margin-right: 5px; }
+.trade-selector button {
+  background: white;
+  border: 1px solid var(--line-strong);
+  color: var(--ink);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 8px 11px;
+}
+.trade-selector button.active { background: var(--green); border-color: var(--green); color: white; }
 .upload-grid { display: grid; gap: 12px; grid-template-columns: 1fr 1fr; }
 .file-picker {
   background: #fafbf9;
@@ -222,6 +241,7 @@ button, input, select { font: inherit; }
   .upload-grid, .vendor-grid { grid-template-columns: 1fr; }
   .vendor-card + .vendor-card { border-left: 0; border-top: 1px solid var(--line); }
   .demo-controls { grid-template-columns: 1fr; }
+  .trade-selector { align-items: stretch; flex-direction: column; }
   .privacy-note { display: block; margin: 10px 0 0; }
   .section-heading { align-items: stretch; flex-direction: column; }
   .difference-card { min-width: 0; }

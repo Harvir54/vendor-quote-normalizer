@@ -18,12 +18,15 @@ class TradeProfileTests(unittest.TestCase):
     def test_lists_supported_trade_metadata(self):
         self.assertEqual(
             supported_trades(),
-            [{"key": "painting", "label": "Interior painting"}],
+            [
+                {"key": "painting", "label": "Interior painting"},
+                {"key": "flooring", "label": "Flooring"},
+            ],
         )
 
     def test_rejects_unknown_trade(self):
         with self.assertRaises(UnsupportedTradeError):
-            get_trade_profile("flooring")
+            get_trade_profile("plumbing")
 
 
 if __name__ == "__main__":
