@@ -39,6 +39,8 @@ type Comparison = {
   }>;
 };
 
+type EngineStatus = "checking" | "ai" | "rules" | "unavailable";
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:8000";
 
 const PAINTING_DEMOS = [
@@ -93,9 +95,24 @@ const PLUMBING_DEMOS = [
 ] as const;
 
 const TRADE_OPTIONS = [
-  { key: "painting", label: "Interior painting", demos: PAINTING_DEMOS },
-  { key: "flooring", label: "Flooring", demos: FLOORING_DEMOS },
-  { key: "plumbing", label: "Plumbing", demos: PLUMBING_DEMOS },
+  {
+    key: "painting",
+    label: "Interior painting",
+    description: "Coats, primer, repairs, ceilings, cleanup, and warranty",
+    demos: PAINTING_DEMOS,
+  },
+  {
+    key: "flooring",
+    label: "Flooring",
+    description: "Area, product specs, removal, subfloor, barriers, and trim",
+    demos: FLOORING_DEMOS,
+  },
+  {
+    key: "plumbing",
+    label: "Plumbing",
+    description: "Fixtures, supply and drain lines, valves, permits, and testing",
+    demos: PLUMBING_DEMOS,
+  },
 ] as const;
 
 function formatCents(cents: number | null) {
@@ -116,10 +133,30 @@ export default function Home() {
   const [result, setResult] = useState<Comparison | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [engineStatus, setEngineStatus] = useState<EngineStatus>("checking");
   const [trade, setTrade] = useState<"painting" | "flooring" | "plumbing">("painting");
   const [firstDemo, setFirstDemo] = useState("blue-oak");
   const [secondDemo, setSecondDemo] = useState("inland-pro");
   const demos = TRADE_OPTIONS.find(({ key }) => key === trade)?.demos ?? PAINTING_DEMOS;
+  const selectedTrade = TRADE_OPTIONS.find(({ key }) => key === trade);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    fetch(`${API_URL}/health`, { signal: controller.signal })
+      .then((response) => {
+        if (!response.ok) throw new Error("Health check failed");
+        return response.json();
+      })
+      .then((health: { ai_enabled: boolean }) => {
+        setEngineStatus(health.ai_enabled ? "ai" : "rules");
+      })
+      .catch((healthError) => {
+        if (healthError instanceof Error && healthError.name !== "AbortError") {
+          setEngineStatus("unavailable");
+        }
+      });
+    return () => controller.abort();
+  }, []);
 
   function changeTrade(nextTrade: "painting" | "flooring" | "plumbing") {
     const nextDemos = TRADE_OPTIONS.find(({ key }) => key === nextTrade)?.demos ?? PAINTING_DEMOS;
@@ -240,6 +277,20 @@ export default function Home() {
 
       <section className="workspace" aria-label="Estimate comparison workspace">
         <form onSubmit={submitComparison}>
+          <div className={`engine-status ${engineStatus}`}>
+            <span className="engine-dot" aria-hidden="true" />
+            <div>
+              <strong>
+                {engineStatus === "ai" ? "AI-assisted evidence review" : "Evidence rules"}
+              </strong>
+              <span>
+                {engineStatus === "checking" && "Checking analysis engine..."}
+                {engineStatus === "ai" && "Ambiguous wording is reviewed by AI and verified against the PDF."}
+                {engineStatus === "rules" && "AI is off. Comparisons still run with deterministic evidence rules."}
+                {engineStatus === "unavailable" && "The analysis service is currently unreachable."}
+              </span>
+            </div>
+          </div>
           <div className="trade-selector" role="group" aria-label="Estimate category">
             <span>Estimate category</span>
             {TRADE_OPTIONS.map((option) => (
@@ -253,6 +304,7 @@ export default function Home() {
               </button>
             ))}
           </div>
+          <p className="trade-description">{selectedTrade?.description}</p>
           <div className="upload-grid">
             <FilePicker
               label="First estimate"

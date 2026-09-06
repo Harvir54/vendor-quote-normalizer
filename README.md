@@ -16,11 +16,12 @@ and risk. Every classification retains the contractor's original wording.
 
 ## Current status
 
-The first trade is interior painting. Three synthetic estimates with different
-layouts and manually verified ground-truth records are included. The working
-prototype extracts digital PDF text, normalizes scope, compares two estimates,
-and displays evidence-backed risks in a web interface. Low-confidence scope
-wording can be interpreted by an optional, evidence-validated AI fallback.
+The prototype supports interior painting, flooring, and plumbing with a
+different comparison profile for each trade. Synthetic demo estimates are
+included for every category. The application extracts digital PDF text,
+normalizes trade-specific scope, compares two estimates, and displays
+evidence-backed risks in a web interface. Low-confidence wording can be
+interpreted by an optional, evidence-validated AI fallback.
 
 ## Prerequisites
 
@@ -121,10 +122,12 @@ Compare two estimates:
   --compare sample-data/quotes/synthetic-painting-estimate-inland-pro.pdf
 ```
 
+Choose a different trade with `--trade flooring` or `--trade plumbing`.
+
 ## Current limitations
 
 - Scanned image-only PDFs require OCR, which is not implemented yet.
-- Extraction currently focuses on interior painting estimates.
+- The current trade profiles cover interior painting, flooring, and plumbing.
 - Comparisons accept two estimates at a time.
 - AI review currently supports text extracted from digital PDFs; OCR remains a
   separate future step.

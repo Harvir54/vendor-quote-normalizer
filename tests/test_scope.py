@@ -161,6 +161,10 @@ class PrimerScopeTests(unittest.TestCase):
 
 
 class RemainingScopeTests(unittest.TestCase):
+    def test_evidence_removes_pdf_control_characters(self):
+        result = classify_cleanup("\x7f Final cleanup included.")
+        self.assertEqual(result["evidence"], "Final cleanup included.")
+
     @classmethod
     def setUpClass(cls):
         cls.blue_oak = extract_pdf_text(

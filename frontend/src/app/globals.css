@@ -86,6 +86,21 @@ button, input, select { font: inherit; }
   border: 1px solid var(--line);
   padding: 22px;
 }
+.engine-status {
+  align-items: center;
+  background: #fafbf9;
+  border: 1px solid var(--line);
+  display: flex;
+  gap: 10px;
+  margin-bottom: 15px;
+  padding: 11px 13px;
+}
+.engine-status > div { display: flex; flex-direction: column; gap: 3px; }
+.engine-status strong { font-size: 12px; }
+.engine-status span { color: var(--muted); font-size: 11px; }
+.engine-dot { background: #a6ada8; border-radius: 50%; flex: 0 0 auto; height: 8px; width: 8px; }
+.engine-status.ai .engine-dot, .engine-status.rules .engine-dot { background: var(--green); }
+.engine-status.unavailable .engine-dot { background: var(--red); }
 .trade-selector {
   align-items: center;
   border-bottom: 1px solid var(--line);
@@ -105,6 +120,7 @@ button, input, select { font: inherit; }
   padding: 8px 11px;
 }
 .trade-selector button.active { background: var(--green); border-color: var(--green); color: white; }
+.trade-description { color: var(--muted); font-size: 12px; margin: -7px 0 16px; }
 .upload-grid { display: grid; gap: 12px; grid-template-columns: 1fr 1fr; }
 .file-picker {
   background: #fafbf9;

@@ -40,9 +40,9 @@ NUMBER_WORDS = {
 def _sentence_chunks(text: str) -> list[str]:
     """Split extracted text into non-empty, cleaned sentences or lines."""
     return [
-        chunk.strip()
+        re.sub(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]", "", chunk).strip()
         for chunk in re.split(r"(?<=[.!?])\s+|\n+", text)
-        if chunk.strip()
+        if re.sub(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]", "", chunk).strip()
     ]
 
 
