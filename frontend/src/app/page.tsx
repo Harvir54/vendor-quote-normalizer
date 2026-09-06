@@ -169,6 +169,14 @@ export default function Home() {
     setError(null);
   }
 
+  function resetComparison() {
+    setFirstFile(null);
+    setSecondFile(null);
+    setResult(null);
+    setError(null);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
   useEffect(() => {
     if (result) {
       document
@@ -372,7 +380,7 @@ export default function Home() {
         </form>
       </section>
 
-      {result && <Results result={result} />}
+      {result && <Results result={result} trade={trade} onReset={resetComparison} />}
 
       <footer className="site-footer">
         Vendor Quote Normalizer keeps missing scope marked as not stated.
@@ -411,7 +419,31 @@ function FilePicker({
   );
 }
 
-function Results({ result }: { result: Comparison }) {
+function Results({
+  result,
+  trade,
+  onReset,
+}: {
+  result: Comparison;
+  trade: string;
+  onReset: () => void;
+}) {
+  function downloadResult() {
+    const report = {
+      generated_at: new Date().toISOString(),
+      trade,
+      ...result,
+    };
+    const url = URL.createObjectURL(
+      new Blob([JSON.stringify(report, null, 2)], { type: "application/json" }),
+    );
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `${trade}-estimate-comparison.json`;
+    link.click();
+    URL.revokeObjectURL(url);
+  }
+
   return (
     <section className="results" id="comparison-results" aria-live="polite">
       <div className="section-heading">
@@ -424,6 +456,12 @@ function Results({ result }: { result: Comparison }) {
           <strong>{formatCents(result.price_difference_cents)}</strong>
           <small>{result.lower_bidder} submitted the lower price</small>
         </div>
+      </div>
+
+      <div className="report-actions" aria-label="Report actions">
+        <button type="button" onClick={() => window.print()}>Print / save PDF</button>
+        <button type="button" onClick={downloadResult}>Download data</button>
+        <button className="reset-button" type="button" onClick={onReset}>New comparison</button>
       </div>
 
       <div className="vendor-grid">
@@ -457,6 +495,11 @@ function Results({ result }: { result: Comparison }) {
       <div className="results-panel">
         <h3>Items to clarify</h3>
         <div className="risk-list">
+          {result.risk_flags.length === 0 && (
+            <p className="empty-risks">
+              No material scope differences were found. Review the evidence before making a final decision.
+            </p>
+          )}
           {result.risk_flags.map((flag) => (
             <article className="risk-card" key={flag.code}>
               <div>

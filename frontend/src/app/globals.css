@@ -205,6 +205,18 @@ button, input, select { font: inherit; }
 .error-message { background: var(--red-soft); border: 1px solid #dfb8b4; color: var(--red); margin-top: 14px; padding: 11px 13px; }
 
 .results { margin-top: 64px; }
+.report-actions { display: flex; gap: 8px; margin: -2px 0 14px; }
+.report-actions button {
+  background: white;
+  border: 1px solid var(--line-strong);
+  color: var(--green);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 9px 12px;
+}
+.report-actions button:hover { border-color: var(--green); }
+.report-actions .reset-button { color: var(--muted); margin-left: auto; }
 .section-heading { align-items: end; display: flex; gap: 30px; justify-content: space-between; margin-bottom: 18px; }
 .section-kicker { color: var(--muted); font-size: 11px; font-weight: 700; }
 .section-heading h2 { font-size: 30px; letter-spacing: -.025em; margin: 5px 0 0; }
@@ -241,6 +253,7 @@ button, input, select { font: inherit; }
 .scope-cell summary { cursor: pointer; }
 .scope-cell details p { color: var(--muted); line-height: 1.5; margin: 8px 0 0; }
 .risk-list { border-top: 1px solid var(--line); }
+.empty-risks { color: var(--muted); font-size: 13px; line-height: 1.5; margin: 0; padding: 18px 0 2px; }
 .risk-card { border-bottom: 1px solid var(--line); padding: 15px 0; }
 .risk-card > div { align-items: center; display: flex; gap: 9px; }
 .severity.high { background: var(--red-soft); color: var(--red); }
@@ -260,8 +273,21 @@ button, input, select { font: inherit; }
   .trade-selector { align-items: stretch; flex-direction: column; }
   .privacy-note { display: block; margin: 10px 0 0; }
   .section-heading { align-items: stretch; flex-direction: column; }
+  .report-actions { align-items: stretch; flex-direction: column; }
+  .report-actions .reset-button { margin-left: 0; }
   .difference-card { min-width: 0; }
   .scope-row { grid-template-columns: 1fr; }
   .scope-header { display: none; }
   .site-footer { margin-left: 18px; margin-right: 18px; }
+}
+
+@media print {
+  body { background: white; }
+  .site-header, .hero, .workspace, .report-actions, .site-footer { display: none !important; }
+  .results { margin: 0; max-width: none; padding: 0; }
+  .section-heading { align-items: end; flex-direction: row; }
+  .results-panel, .vendor-grid { break-inside: avoid; }
+  .scope-cell details > summary { display: none; }
+  .scope-cell details > p { display: block; }
+  .risk-card { break-inside: avoid; }
 }
