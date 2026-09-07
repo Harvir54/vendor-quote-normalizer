@@ -1,5 +1,8 @@
 import unittest
 from pathlib import Path
+from tempfile import NamedTemporaryFile
+
+from pypdf import PdfWriter
 
 from app.pdf_text import (
     PdfExtractionError,
@@ -15,6 +18,37 @@ QUOTES = ROOT / "sample-data" / "quotes"
 
 
 class PdfTextTests(unittest.TestCase):
+    def test_uses_ocr_fallback_for_image_only_pdf(self):
+        class FakeTranscriber:
+            def __init__(self):
+                self.paths = []
+
+            def transcribe_pdf(self, pdf_path):
+                self.paths.append(pdf_path)
+                return "SCANNED QUOTE\nESTIMATE TOTAL $1,250.00"
+
+        with NamedTemporaryFile(suffix=".pdf") as temporary_pdf:
+            writer = PdfWriter()
+            writer.add_blank_page(width=612, height=792)
+            writer.write(temporary_pdf)
+            temporary_pdf.flush()
+            transcriber = FakeTranscriber()
+
+            text = extract_pdf_text(Path(temporary_pdf.name), transcriber)
+
+        self.assertIn("SCANNED QUOTE", text)
+        self.assertEqual(transcriber.paths, [Path(temporary_pdf.name)])
+
+    def test_scanned_pdf_explains_how_to_enable_ocr(self):
+        with NamedTemporaryFile(suffix=".pdf") as temporary_pdf:
+            writer = PdfWriter()
+            writer.add_blank_page(width=612, height=792)
+            writer.write(temporary_pdf)
+            temporary_pdf.flush()
+
+            with self.assertRaisesRegex(PdfExtractionError, "OPENAI_API_KEY"):
+                extract_pdf_text(Path(temporary_pdf.name))
+
     def test_finds_multiple_money_values(self):
         text = "Repair is $550.00 and the total is $4,750.00"
         self.assertEqual(find_money_values(text), ["$550.00", "$4,750.00"])

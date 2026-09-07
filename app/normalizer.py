@@ -77,4 +77,8 @@ def normalize_estimate(
     trade: str = "painting",
 ) -> NormalizedEstimate:
     """Extract PDF text and return its normalized estimate fields."""
-    return normalize_estimate_text(extract_pdf_text(pdf_path), ai_extractor, trade)
+    return normalize_estimate_text(
+        extract_pdf_text(pdf_path, ai_extractor),
+        ai_extractor,
+        trade,
+    )

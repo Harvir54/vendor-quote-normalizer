@@ -1,7 +1,8 @@
-"""Extract text from digital PDF estimates."""
+"""Extract text from digital PDFs with an optional scanned-PDF fallback."""
 
 import re
 from pathlib import Path
+from typing import Protocol
 
 from pypdf import PdfReader
 
@@ -10,11 +11,23 @@ class PdfExtractionError(RuntimeError):
     """Raised when usable text cannot be extracted from a PDF."""
 
 
-def extract_pdf_text(pdf_path: Path) -> str:
+class PDFTranscriber(Protocol):
+    """Convert an image-only PDF into plain text."""
+
+    def transcribe_pdf(self, pdf_path: Path) -> str: ...
+
+
+MAX_OCR_PAGES = 10
+
+
+def extract_pdf_text(
+    pdf_path: Path,
+    ocr_transcriber: PDFTranscriber | None = None,
+) -> str:
     """Return readable text from every page in a PDF.
 
-    This first version handles PDFs that already contain a text layer. Scanned
-    image-only estimates will be supported later with OCR.
+    Prefer the PDF's local text layer. Only image-only documents use the
+    optional remote transcriber, which avoids unnecessary API cost.
     """
     path = Path(pdf_path)
     if not path.is_file():
@@ -34,9 +47,27 @@ def extract_pdf_text(pdf_path: Path) -> str:
             pages.append(f"--- Page {page_number} ---\n{text}")
 
     if not pages:
-        raise PdfExtractionError(
-            "No text was found. This may be a scanned PDF that requires OCR."
-        )
+        if ocr_transcriber is None:
+            raise PdfExtractionError(
+                "No text was found. Scanned PDFs require the optional AI OCR "
+                "fallback; configure OPENAI_API_KEY and try again."
+            )
+        if len(reader.pages) > MAX_OCR_PAGES:
+            raise PdfExtractionError(
+                f"Scanned PDFs are limited to {MAX_OCR_PAGES} pages to control "
+                "processing cost."
+            )
+        try:
+            transcribed_text = ocr_transcriber.transcribe_pdf(path).strip()
+        except Exception as exc:
+            raise PdfExtractionError(
+                "The scanned PDF could not be read by the AI OCR fallback."
+            ) from exc
+        if not transcribed_text:
+            raise PdfExtractionError(
+                "The AI OCR fallback did not find readable text in this PDF."
+            )
+        return transcribed_text + "\n"
 
     return "\n\n".join(pages) + "\n"
 

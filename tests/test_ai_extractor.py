@@ -1,9 +1,13 @@
 import unittest
+from pathlib import Path
+from tempfile import NamedTemporaryFile
+from types import SimpleNamespace
 
 from app.ai_extractor import (
     AIClassification,
     AIExtractionUnavailable,
     AIExtractionBatch,
+    OpenAIExtractor,
     apply_ai_review,
 )
 from app.normalizer import normalize_estimate_text
@@ -109,6 +113,36 @@ class AIExtractorTests(unittest.TestCase):
 
         self.assertEqual(result["cleanup"]["source"], "rule")
         self.assertTrue(result["cleanup"]["review_required"])
+
+    def test_transcribes_pdf_and_deletes_remote_file(self):
+        class FakeFiles:
+            def __init__(self):
+                self.deleted = []
+
+            def create(self, **kwargs):
+                self.purpose = kwargs["purpose"]
+                return SimpleNamespace(id="file-test")
+
+            def delete(self, file_id):
+                self.deleted.append(file_id)
+
+        class FakeResponses:
+            def create(self, **kwargs):
+                self.request = kwargs
+                return SimpleNamespace(output_text="ACME QUOTE\nTOTAL $900.00")
+
+        client = SimpleNamespace(files=FakeFiles(), responses=FakeResponses())
+        extractor = OpenAIExtractor(client=client, model="test-model")
+        with NamedTemporaryFile(suffix=".pdf") as temporary_pdf:
+            temporary_pdf.write(b"%PDF-test")
+            temporary_pdf.flush()
+            result = extractor.transcribe_pdf(Path(temporary_pdf.name))
+
+        self.assertEqual(result, "ACME QUOTE\nTOTAL $900.00")
+        self.assertEqual(client.files.purpose, "user_data")
+        self.assertEqual(client.files.deleted, ["file-test"])
+        content = client.responses.request["input"][0]["content"]
+        self.assertEqual(content[0]["file_id"], "file-test")
 
 
 if __name__ == "__main__":

@@ -18,7 +18,8 @@ and risk. Every classification retains the contractor's original wording.
 
 The prototype supports interior painting, flooring, and plumbing with a
 different comparison profile for each trade. Synthetic demo estimates are
-included for every category. The application extracts digital PDF text,
+included for every category. The application extracts digital PDF text and,
+when the optional API key is configured, transcribes scanned PDFs with AI,
 normalizes trade-specific scope, compares two estimates, and displays
 evidence-backed risks in a web interface. Low-confidence wording can be
 interpreted by an optional, evidence-validated AI fallback.
@@ -70,6 +71,11 @@ The backend uses deterministic rules first. When a result is marked for review
 and `OPENAI_API_KEY` is available, it sends the flagged categories to OpenAI's
 Responses API using a strict structured-output schema. Model evidence must be
 an exact quote from the extracted PDF text before the result is accepted.
+
+The same key enables OCR for image-only PDFs. Digital PDFs are still processed
+locally first, so OCR is not called or billed unless no text layer is found.
+Scanned documents are limited to 10 pages to control cost. You can set
+`OPENAI_OCR_MODEL` separately; otherwise OCR uses `OPENAI_MODEL`.
 
 Set the key in the same terminal used to start the API:
 
@@ -126,8 +132,6 @@ Choose a different trade with `--trade flooring` or `--trade plumbing`.
 
 ## Current limitations
 
-- Scanned image-only PDFs require OCR, which is not implemented yet.
+- Scanned image-only PDFs require `OPENAI_API_KEY` and are limited to 10 pages.
 - The current trade profiles cover interior painting, flooring, and plumbing.
 - Comparisons accept two estimates at a time.
-- AI review currently supports text extracted from digital PDFs; OCR remains a
-  separate future step.

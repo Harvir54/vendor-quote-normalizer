@@ -1,9 +1,10 @@
 """Interpret low-confidence estimate scope using structured model output."""
 
 import os
-from typing import Literal, Protocol, cast
+from contextlib import suppress
+from pathlib import Path
+from typing import Any, Literal, Protocol, cast
 
-from openai import OpenAI, OpenAIError
 from pydantic import BaseModel, Field
 
 from app.normalizer import NormalizedEstimate
@@ -65,8 +66,13 @@ class AIExtractionUnavailable(RuntimeError):
 class OpenAIExtractor:
     """Use the Responses API to classify only rule-flagged scope categories."""
 
-    def __init__(self, client: OpenAI | None = None, model: str | None = None):
-        self.client = client or OpenAI()
+    def __init__(self, client: Any | None = None, model: str | None = None):
+        if client is None:
+            # Keep the large optional SDK off the startup path when AI is disabled.
+            from openai import OpenAI
+
+            client = OpenAI()
+        self.client = client
         self.model = model or os.getenv("OPENAI_MODEL", "gpt-5.6")
 
     def classify(
@@ -98,13 +104,56 @@ class OpenAIExtractor:
                 ],
                 text_format=AIExtractionBatch,
             )
-        except OpenAIError as exc:
+        except Exception as exc:
             raise AIExtractionUnavailable(
                 "AI review is temporarily unavailable; rule results were preserved."
             ) from exc
         if response.output_parsed is None:
             raise ValueError("The model did not return a structured extraction.")
         return response.output_parsed
+
+    def transcribe_pdf(self, pdf_path: Path) -> str:
+        """Transcribe an image-only estimate using PDF page vision."""
+        uploaded_file = None
+        try:
+            with pdf_path.open("rb") as pdf:
+                uploaded_file = self.client.files.create(
+                    file=pdf,
+                    purpose="user_data",
+                )
+            response = self.client.responses.create(
+                model=os.getenv("OPENAI_OCR_MODEL", self.model),
+                input=[
+                    {
+                        "role": "user",
+                        "content": [
+                            {
+                                "type": "input_file",
+                                "file_id": uploaded_file.id,
+                            },
+                            {
+                                "type": "input_text",
+                                "text": (
+                                    "Transcribe all visible text in this contractor "
+                                    "estimate. Preserve reading order, line breaks, "
+                                    "prices, quantities, headings, exclusions, and "
+                                    "warranty terms. Do not summarize, correct, infer, "
+                                    "or add any text. Return only the transcription."
+                                ),
+                            },
+                        ],
+                    }
+                ],
+            )
+            return response.output_text
+        except Exception as exc:
+            raise AIExtractionUnavailable(
+                "AI OCR is temporarily unavailable."
+            ) from exc
+        finally:
+            if uploaded_file is not None:
+                with suppress(Exception):
+                    self.client.files.delete(uploaded_file.id)
 
 
 def configured_ai_extractor() -> OpenAIExtractor | None:
