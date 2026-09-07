@@ -22,6 +22,13 @@ from app.flooring_scope import (
     classify_transitions,
     classify_underlayment,
 )
+from app.painting_scope import (
+    classify_lead_safety,
+    classify_paint_specifications,
+    classify_property_protection,
+    classify_surface_preparation,
+    classify_trim_and_doors,
+)
 from app.plumbing_scope import (
     classify_drain_lines,
     classify_fixture_installation,
@@ -46,6 +53,7 @@ class TradeProfile:
     classifiers: dict[str, ScopeClassifier]
     risk_descriptions: dict[str, str]
     ai_review_categories: tuple[str, ...]
+    detail_fields: tuple[str, ...] = ()
 
 
 PAINTING = TradeProfile(
@@ -56,6 +64,11 @@ PAINTING = TradeProfile(
         "ceilings": "Ceilings",
         "primer": "Primer",
         "drywall_repair": "Drywall repair",
+        "surface_preparation": "Surface preparation",
+        "property_protection": "Property protection",
+        "trim_and_doors": "Trim and doors",
+        "paint_specifications": "Paint specifications",
+        "lead_safety": "Lead-safety language",
         "cleanup": "Cleanup",
         "debris_disposal": "Debris disposal",
         "labor_warranty": "Labor warranty",
@@ -65,6 +78,11 @@ PAINTING = TradeProfile(
         "walls": classify_walls,
         "primer": classify_primer,
         "drywall_repair": classify_drywall_repair,
+        "surface_preparation": classify_surface_preparation,
+        "property_protection": classify_property_protection,
+        "trim_and_doors": classify_trim_and_doors,
+        "paint_specifications": classify_paint_specifications,
+        "lead_safety": classify_lead_safety,
         "cleanup": classify_cleanup,
         "debris_disposal": classify_debris_disposal,
         "labor_warranty": classify_labor_warranty,
@@ -72,6 +90,8 @@ PAINTING = TradeProfile(
     risk_descriptions={
         "ceilings": "ceiling painting",
         "primer": "primer",
+        "surface_preparation": "surface preparation",
+        "property_protection": "protection of floors and fixed property",
         "cleanup": "cleanup",
         "debris_disposal": "debris disposal",
         "labor_warranty": "a labor warranty",
@@ -81,10 +101,16 @@ PAINTING = TradeProfile(
         "walls",
         "primer",
         "drywall_repair",
+        "surface_preparation",
+        "property_protection",
+        "trim_and_doors",
+        "paint_specifications",
+        "lead_safety",
         "cleanup",
         "debris_disposal",
         "labor_warranty",
     ),
+    detail_fields=("trim_and_doors", "paint_specifications", "lead_safety"),
 )
 
 FLOORING = TradeProfile(

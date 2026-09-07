@@ -52,7 +52,7 @@ class ApiTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(result["price_difference_cents"], 86000)
         self.assertEqual(result["lower_bidder"], "Inland Pro Paint & Repair")
-        self.assertEqual(len(result["risk_flags"]), 6)
+        self.assertEqual(len(result["risk_flags"]), 7)
 
     def test_compares_three_uploaded_estimates(self):
         paths = [

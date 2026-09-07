@@ -16,6 +16,9 @@ type ScopeValue = {
   thickness_mm?: number | null;
   fixture_count?: number | null;
   fixture_types?: string[];
+  manufacturer?: string | null;
+  product_line?: string | null;
+  sheens?: string[];
 };
 
 type Comparison = {
@@ -39,7 +42,7 @@ type Comparison = {
   lowest_bidder: string | null;
   scope_comparison: Record<
     string,
-    { label: string; values: ScopeValue[] }
+    { label: string; detail: boolean; values: ScopeValue[] }
   >;
   risk_flags: Array<{
     code: string;
@@ -454,6 +457,10 @@ function Results({
   trade: string;
   onReset: () => void;
 }) {
+  const scopeRows = Object.entries(result.scope_comparison);
+  const primaryScopeRows = scopeRows.filter(([, row]) => !row.detail);
+  const detailScopeRows = scopeRows.filter(([, row]) => row.detail);
+
   function downloadResult() {
     const report = {
       generated_at: new Date().toISOString(),
@@ -515,29 +522,13 @@ function Results({
 
       <div className="results-panel">
         <h3>Scope comparison</h3>
-        <div className="scope-table">
-          <div
-            className="scope-row scope-header"
-            style={{ gridTemplateColumns: `minmax(150px, .72fr) repeat(${result.vendors.length}, minmax(190px, 1fr))` }}
-          >
-            <span>Scope item</span>
-            {result.vendors.map((vendor, index) => (
-              <span key={`${vendor.vendor_name}-${index}`}>{vendor.vendor_name}</span>
-            ))}
-          </div>
-          {Object.entries(result.scope_comparison).map(([key, row]) => (
-            <div
-              className="scope-row"
-              key={key}
-              style={{ gridTemplateColumns: `minmax(150px, .72fr) repeat(${result.vendors.length}, minmax(190px, 1fr))` }}
-            >
-              <strong>{row.label}</strong>
-              {row.values.map((value, index) => (
-                <ScopeCell value={value} key={index} />
-              ))}
-            </div>
-          ))}
-        </div>
+        <ScopeTable vendors={result.vendors} rows={primaryScopeRows} />
+        {detailScopeRows.length > 0 && (
+          <details className="technical-details">
+            <summary>More specifications and compliance details</summary>
+            <ScopeTable vendors={result.vendors} rows={detailScopeRows} />
+          </details>
+        )}
       </div>
 
       <div className="results-panel">
@@ -561,6 +552,34 @@ function Results({
         </div>
       </div>
     </section>
+  );
+}
+
+function ScopeTable({
+  vendors,
+  rows,
+}: {
+  vendors: Comparison["vendors"];
+  rows: Array<[string, Comparison["scope_comparison"][string]]>;
+}) {
+  const columns = `minmax(150px, .72fr) repeat(${vendors.length}, minmax(190px, 1fr))`;
+  return (
+    <div className="scope-table">
+      <div className="scope-row scope-header" style={{ gridTemplateColumns: columns }}>
+        <span>Scope item</span>
+        {vendors.map((vendor, index) => (
+          <span key={`${vendor.vendor_name}-${index}`}>{vendor.vendor_name}</span>
+        ))}
+      </div>
+      {rows.map(([key, row]) => (
+        <div className="scope-row" key={key} style={{ gridTemplateColumns: columns }}>
+          <strong>{row.label}</strong>
+          {row.values.map((value, index) => (
+            <ScopeCell value={value} key={index} />
+          ))}
+        </div>
+      ))}
+    </div>
   );
 }
 
@@ -625,6 +644,11 @@ function ScopeCell({ value }: { value: ScopeValue }) {
       )}
       {value.fixture_count !== undefined && value.fixture_count !== null && (
         <small>{value.fixture_count} fixtures</small>
+      )}
+      {value.manufacturer && <small>{value.manufacturer}</small>}
+      {value.product_line && <small>{value.product_line}</small>}
+      {value.sheens && value.sheens.length > 0 && (
+        <small>{value.sheens.join(", ")} finishes</small>
       )}
       {value.evidence && <details><summary>View evidence</summary><p>{value.evidence}</p></details>}
     </div>

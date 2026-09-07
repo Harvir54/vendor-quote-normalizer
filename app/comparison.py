@@ -62,6 +62,7 @@ def _scope_matrix(
     for field, label in profile.scope_labels.items():
         matrix[field] = {
             "label": label,
+            "detail": field in profile.detail_fields,
             "first": first[field],
             "second": second[field],
         }
@@ -366,6 +367,7 @@ def compare_many_normalized_estimates(
         "scope_comparison": {
             field: {
                 "label": label,
+                "detail": field in profile.detail_fields,
                 "values": [estimate[field] for estimate in estimates],
             }
             for field, label in profile.scope_labels.items()

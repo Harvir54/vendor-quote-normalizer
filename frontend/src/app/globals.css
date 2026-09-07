@@ -272,6 +272,9 @@ button, input, select { font: inherit; }
 .scope-cell details { color: var(--green); font-size: 12px; }
 .scope-cell summary { cursor: pointer; }
 .scope-cell details p { color: var(--muted); line-height: 1.5; margin: 8px 0 0; }
+.technical-details { margin-top: 14px; }
+.technical-details > summary { color: var(--green); cursor: pointer; font-size: 12px; font-weight: 700; }
+.technical-details > .scope-table { margin-top: 12px; }
 .risk-list { border-top: 1px solid var(--line); }
 .empty-risks { color: var(--muted); font-size: 13px; line-height: 1.5; margin: 0; padding: 18px 0 2px; }
 .risk-card { border-bottom: 1px solid var(--line); padding: 15px 0; }

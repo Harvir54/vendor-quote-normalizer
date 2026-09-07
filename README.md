@@ -29,6 +29,11 @@ proposal number, issue date, validity, contractor license, project schedule,
 payment terms, and exclusions. These stay collapsed in the interface until a
 user chooses to review them.
 
+Painting comparisons also evaluate surface preparation, protection of floors
+and fixed property, trim and doors, stated paint manufacturer/product/sheen,
+and lead-safety language. Secondary specifications remain collapsed by default
+so the main scope comparison stays concise.
+
 ## Prerequisites
 
 - Python 3.11 or newer

@@ -43,9 +43,15 @@ class ComparisonTests(unittest.TestCase):
             "CLEANUP_NOT_STATED",
             "DEBRIS_DISPOSAL_NOT_STATED",
             "LABOR_WARRANTY_NOT_STATED",
+            "PROPERTY_PROTECTION_NOT_STATED",
         }
         self.assertEqual(set(flags), expected)
-        self.assertTrue(all(flag["evidence"] for flag in flags.values()))
+        self.assertTrue(all(
+            flag["evidence"]
+            for code, flag in flags.items()
+            if code != "PROPERTY_PROTECTION_NOT_STATED"
+        ))
+        self.assertIsNone(flags["PROPERTY_PROTECTION_NOT_STATED"]["evidence"])
         self.assertEqual(
             flags["CEILINGS_EXCLUDED"]["vendor_name"],
             "Inland Pro Paint & Repair",
