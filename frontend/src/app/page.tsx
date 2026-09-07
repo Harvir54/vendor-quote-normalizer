@@ -26,11 +26,11 @@ type Comparison = {
     unit_price_cents: number | null;
     unit_label: string | null;
   }>;
-  price_difference_cents: number | null;
-  lower_bidder: string | null;
+  price_range_cents: number | null;
+  lowest_bidder: string | null;
   scope_comparison: Record<
     string,
-    { label: string; first: ScopeValue; second: ScopeValue }
+    { label: string; values: ScopeValue[] }
   >;
   risk_flags: Array<{
     code: string;
@@ -130,15 +130,17 @@ function displayStatus(status: ScopeValue["status"]) {
 }
 
 export default function Home() {
-  const [firstFile, setFirstFile] = useState<File | null>(null);
-  const [secondFile, setSecondFile] = useState<File | null>(null);
+  const [files, setFiles] = useState<Array<File | null>>([null, null]);
   const [result, setResult] = useState<Comparison | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [engineStatus, setEngineStatus] = useState<EngineStatus>("checking");
   const [trade, setTrade] = useState<"painting" | "flooring" | "plumbing">("painting");
-  const [firstDemo, setFirstDemo] = useState("blue-oak");
-  const [secondDemo, setSecondDemo] = useState("inland-pro");
+  const [selectedDemos, setSelectedDemos] = useState<string[]>([
+    "blue-oak",
+    "inland-pro",
+    "canyon-view",
+  ]);
   const demos = TRADE_OPTIONS.find(({ key }) => key === trade)?.demos ?? PAINTING_DEMOS;
   const selectedTrade = TRADE_OPTIONS.find(({ key }) => key === trade);
 
@@ -163,17 +165,14 @@ export default function Home() {
   function changeTrade(nextTrade: "painting" | "flooring" | "plumbing") {
     const nextDemos = TRADE_OPTIONS.find(({ key }) => key === nextTrade)?.demos ?? PAINTING_DEMOS;
     setTrade(nextTrade);
-    setFirstDemo(nextDemos[0].id);
-    setSecondDemo(nextDemos[1].id);
-    setFirstFile(null);
-    setSecondFile(null);
+    setSelectedDemos(nextDemos.slice(0, 3).map(({ id }) => id));
+    setFiles([null, null]);
     setResult(null);
     setError(null);
   }
 
   function resetComparison() {
-    setFirstFile(null);
-    setSecondFile(null);
+    setFiles([null, null]);
     setResult(null);
     setError(null);
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -191,49 +190,60 @@ export default function Home() {
     setError(null);
     setResult(null);
 
-    if (firstDemo === secondDemo) {
-      setError("Choose two different demo estimates.");
+    if (selectedDemos.length < 2) {
+      setError("Choose at least two demo estimates.");
       return;
     }
 
-    const firstEstimate = demos.find(({ id }) => id === firstDemo);
-    const secondEstimate = demos.find(({ id }) => id === secondDemo);
-    if (!firstEstimate || !secondEstimate) {
+    const selectedEstimates = selectedDemos.map((demoId) =>
+      demos.find(({ id }) => id === demoId),
+    );
+    if (selectedEstimates.some((estimate) => !estimate)) {
       setError("The selected demo estimates could not be found.");
       return;
     }
 
-    const [firstResponse, secondResponse] = await Promise.all([
-      fetch(firstEstimate.path),
-      fetch(secondEstimate.path),
-    ]);
+    const responses = await Promise.all(
+      selectedEstimates.map((estimate) => fetch(estimate!.path)),
+    );
 
-    if (!firstResponse.ok || !secondResponse.ok) {
+    if (responses.some((response) => !response.ok)) {
       setError("The demo estimates could not be loaded.");
       return;
     }
 
-    const [firstBlob, secondBlob] = await Promise.all([
-      firstResponse.blob(),
-      secondResponse.blob(),
-    ]);
-
-    setFirstFile(
-      new File([firstBlob], firstEstimate.filename, {
-        type: "application/pdf",
-      }),
+    const blobs = await Promise.all(responses.map((response) => response.blob()));
+    setFiles(
+      blobs.map(
+        (blob, index) =>
+          new File([blob], selectedEstimates[index]!.filename, {
+            type: "application/pdf",
+          }),
+      ),
     );
-    setSecondFile(
-      new File([secondBlob], secondEstimate.filename, {
-        type: "application/pdf",
-      }),
+  }
+
+  function updateFile(index: number, file: File | null) {
+    setFiles((current) => current.map((value, itemIndex) =>
+      itemIndex === index ? file : value,
+    ));
+  }
+
+  function toggleDemo(demoId: string) {
+    setSelectedDemos((current) =>
+      current.includes(demoId)
+        ? current.filter((id) => id !== demoId)
+        : current.length < 5
+          ? [...current, demoId]
+          : current,
     );
   }
 
   async function submitComparison(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!firstFile || !secondFile) {
-      setError("Choose two PDF estimates before comparing.");
+    const selectedFiles = files.filter((file): file is File => file !== null);
+    if (selectedFiles.length < 2 || selectedFiles.length !== files.length) {
+      setError("Choose a PDF for every estimate before comparing.");
       return;
     }
 
@@ -243,11 +253,10 @@ export default function Home() {
 
     const formData = new FormData();
     formData.append("trade", trade);
-    formData.append("first_estimate", firstFile);
-    formData.append("second_estimate", secondFile);
+    selectedFiles.forEach((file) => formData.append("estimates", file));
 
     try {
-      const response = await fetch(`${API_URL}/estimates/compare`, {
+      const response = await fetch(`${API_URL}/estimates/compare-many`, {
         method: "POST",
         body: formData,
       });
@@ -315,17 +324,32 @@ export default function Home() {
             ))}
           </div>
           <p className="trade-description">{selectedTrade?.description}</p>
+          <div className="upload-heading">
+            <div>
+              <strong>Estimates</strong>
+              <span>Upload between 2 and 5 vendor quotes.</span>
+            </div>
+            {files.length < 5 && (
+              <button
+                type="button"
+                onClick={() => setFiles((current) => [...current, null])}
+              >
+                Add estimate
+              </button>
+            )}
+          </div>
           <div className="upload-grid">
-            <FilePicker
-              label="First estimate"
-              file={firstFile}
-              onChange={setFirstFile}
-            />
-            <FilePicker
-              label="Second estimate"
-              file={secondFile}
-              onChange={setSecondFile}
-            />
+            {files.map((file, index) => (
+              <FilePicker
+                key={index}
+                label={`Estimate ${index + 1}`}
+                file={file}
+                onChange={(nextFile) => updateFile(index, nextFile)}
+                onRemove={files.length > 2
+                  ? () => setFiles((current) => current.filter((_, itemIndex) => itemIndex !== index))
+                  : undefined}
+              />
+            ))}
           </div>
 
           {error && <div className="error-message">{error}</div>}
@@ -334,41 +358,27 @@ export default function Home() {
             <div className="demo-library-heading">
               <div>
                 <strong>Demo library</strong>
-                <span>Choose two sample bids to explore the comparison.</span>
+                <span>Choose 2–5 sample bids to explore the comparison.</span>
               </div>
               <span className="sample-count">
                 {TRADE_OPTIONS.find(({ key }) => key === trade)?.label} estimates
               </span>
             </div>
             <div className="demo-controls">
-              <label>
-                First demo
-                <select
-                  value={firstDemo}
-                  onChange={(event) => setFirstDemo(event.target.value)}
-                >
-                  {demos.map((estimate) => (
-                    <option value={estimate.id} key={estimate.id}>
-                      {estimate.name}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label>
-                Second demo
-                <select
-                  value={secondDemo}
-                  onChange={(event) => setSecondDemo(event.target.value)}
-                >
-                  {demos.map((estimate) => (
-                    <option value={estimate.id} key={estimate.id}>
-                      {estimate.name}
-                    </option>
-                  ))}
-                </select>
-              </label>
+              <div className="demo-options">
+                {demos.map((estimate) => (
+                  <label key={estimate.id}>
+                    <input
+                      type="checkbox"
+                      checked={selectedDemos.includes(estimate.id)}
+                      onChange={() => toggleDemo(estimate.id)}
+                    />
+                    <span>{estimate.name}</span>
+                  </label>
+                ))}
+              </div>
               <button className="demo-button" type="button" onClick={loadDemoEstimates}>
-                Use selected demos
+                Load selected demos
               </button>
             </div>
           </div>
@@ -395,16 +405,21 @@ function FilePicker({
   label,
   file,
   onChange,
+  onRemove,
 }: {
   label: string;
   file: File | null;
   onChange: (file: File | null) => void;
+  onRemove?: () => void;
 }) {
   const inputId = `estimate-${label.toLowerCase().replaceAll(" ", "-")}`;
 
   return (
     <div className={`file-picker ${file ? "has-file" : ""}`}>
-      <strong>{label}</strong>
+      <div className="file-picker-heading">
+        <strong>{label}</strong>
+        {onRemove && <button type="button" onClick={onRemove}>Remove</button>}
+      </div>
       <span>
         {file
           ? `${file.name} · ${(file.size / 1024).toFixed(0)} KB`
@@ -454,9 +469,13 @@ function Results({
           <h2>Estimate review</h2>
         </div>
         <div className="difference-card">
-          <span>Price difference</span>
-          <strong>{formatCents(result.price_difference_cents)}</strong>
-          <small>{result.lower_bidder} submitted the lower price</small>
+          <span>Price range</span>
+          <strong>{formatCents(result.price_range_cents)}</strong>
+          <small>
+            {result.lowest_bidder
+              ? `${result.lowest_bidder} submitted the lowest price`
+              : "No single lowest bidder was identified"}
+          </small>
         </div>
       </div>
 
@@ -466,7 +485,10 @@ function Results({
         <button className="reset-button" type="button" onClick={onReset}>New comparison</button>
       </div>
 
-      <div className="vendor-grid">
+      <div
+        className="vendor-grid"
+        style={{ gridTemplateColumns: `repeat(${result.vendors.length}, minmax(190px, 1fr))` }}
+      >
         {result.vendors.map((vendor, index) => (
           <article className="vendor-card" key={`${vendor.vendor_name}-${index}`}>
             <span>Estimate {index + 1}</span>
@@ -484,16 +506,25 @@ function Results({
       <div className="results-panel">
         <h3>Scope comparison</h3>
         <div className="scope-table">
-          <div className="scope-row scope-header">
+          <div
+            className="scope-row scope-header"
+            style={{ gridTemplateColumns: `minmax(150px, .72fr) repeat(${result.vendors.length}, minmax(190px, 1fr))` }}
+          >
             <span>Scope item</span>
-            <span>{result.vendors[0]?.vendor_name}</span>
-            <span>{result.vendors[1]?.vendor_name}</span>
+            {result.vendors.map((vendor, index) => (
+              <span key={`${vendor.vendor_name}-${index}`}>{vendor.vendor_name}</span>
+            ))}
           </div>
           {Object.entries(result.scope_comparison).map(([key, row]) => (
-            <div className="scope-row" key={key}>
+            <div
+              className="scope-row"
+              key={key}
+              style={{ gridTemplateColumns: `minmax(150px, .72fr) repeat(${result.vendors.length}, minmax(190px, 1fr))` }}
+            >
               <strong>{row.label}</strong>
-              <ScopeCell value={row.first} />
-              <ScopeCell value={row.second} />
+              {row.values.map((value, index) => (
+                <ScopeCell value={value} key={index} />
+              ))}
             </div>
           ))}
         </div>
@@ -507,8 +538,8 @@ function Results({
               No material scope differences were found. Review the evidence before making a final decision.
             </p>
           )}
-          {result.risk_flags.map((flag) => (
-            <article className="risk-card" key={flag.code}>
+          {result.risk_flags.map((flag, index) => (
+            <article className="risk-card" key={`${flag.code}-${flag.vendor_name}-${index}`}>
               <div>
                 <span className={`severity ${flag.severity}`}>{flag.severity}</span>
                 <strong>{flag.vendor_name}</strong>

@@ -6,7 +6,7 @@ from tempfile import NamedTemporaryFile
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.comparison import compare_estimates
+from app.comparison import compare_estimates, compare_many_estimates
 from app.ai_extractor import configured_ai_extractor
 from app.normalizer import normalize_estimate
 from app.pdf_text import PdfExtractionError
@@ -117,3 +117,34 @@ async def compare_uploaded_estimates(
         raise HTTPException(status_code=422, detail=str(exc)) from exc
     finally:
         _delete_temporary_files(first_path, second_path)
+
+
+@app.post("/estimates/compare-many")
+async def compare_many_uploaded_estimates(
+    estimates: list[UploadFile] = File(...),
+    trade: str = Form("painting"),
+) -> dict:
+    """Normalize and compare between two and five contractor estimates."""
+    try:
+        get_trade_profile(trade)
+    except UnsupportedTradeError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    if not 2 <= len(estimates) <= 5:
+        raise HTTPException(
+            status_code=400,
+            detail="Upload between 2 and 5 PDF estimates.",
+        )
+
+    temporary_paths: list[Path] = []
+    try:
+        for estimate in estimates:
+            temporary_paths.append(await _save_uploaded_pdf(estimate))
+        return compare_many_estimates(
+            temporary_paths,
+            configured_ai_extractor(),
+            trade,
+        )
+    except PdfExtractionError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    finally:
+        _delete_temporary_files(*temporary_paths)

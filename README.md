@@ -20,7 +20,7 @@ The prototype supports interior painting, flooring, and plumbing with a
 different comparison profile for each trade. Synthetic demo estimates are
 included for every category. The application extracts digital PDF text and,
 when the optional API key is configured, transcribes scanned PDFs with AI,
-normalizes trade-specific scope, compares two estimates, and displays
+normalizes trade-specific scope, compares two to five estimates, and displays
 evidence-backed risks in a web interface. Low-confidence wording can be
 interpreted by an optional, evidence-validated AI fallback.
 
@@ -134,4 +134,4 @@ Choose a different trade with `--trade flooring` or `--trade plumbing`.
 
 - Scanned image-only PDFs require `OPENAI_API_KEY` and are limited to 10 pages.
 - The current trade profiles cover interior painting, flooring, and plumbing.
-- Comparisons accept two estimates at a time.
+- Each comparison accepts between two and five estimates.

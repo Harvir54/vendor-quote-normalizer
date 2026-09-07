@@ -54,6 +54,39 @@ class ApiTests(unittest.TestCase):
         self.assertEqual(result["lower_bidder"], "Inland Pro Paint & Repair")
         self.assertEqual(len(result["risk_flags"]), 6)
 
+    def test_compares_three_uploaded_estimates(self):
+        paths = [
+            QUOTES / "synthetic-painting-estimate-blue-oak.pdf",
+            QUOTES / "synthetic-painting-estimate-inland-pro.pdf",
+            QUOTES / "synthetic-painting-proposal-canyon-view.pdf",
+        ]
+        opened = [path.open("rb") for path in paths]
+        try:
+            response = CLIENT.post(
+                "/estimates/compare-many",
+                files=[
+                    ("estimates", (path.name, pdf, "application/pdf"))
+                    for path, pdf in zip(paths, opened)
+                ],
+            )
+        finally:
+            for pdf in opened:
+                pdf.close()
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.json()["vendors"]), 3)
+        self.assertIn("price_range_cents", response.json())
+
+    def test_multi_comparison_requires_at_least_two_estimates(self):
+        path = QUOTES / "synthetic-painting-estimate-blue-oak.pdf"
+        with path.open("rb") as pdf:
+            response = CLIENT.post(
+                "/estimates/compare-many",
+                files={"estimates": (path.name, pdf, "application/pdf")},
+            )
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("between 2 and 5", response.json()["detail"])
+
     def test_rejects_non_pdf_upload(self):
         response = CLIENT.post(
             "/estimates/normalize",

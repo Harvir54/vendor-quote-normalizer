@@ -1,7 +1,7 @@
 import unittest
 from pathlib import Path
 
-from app.comparison import compare_estimates, money_to_cents
+from app.comparison import compare_estimates, compare_many_estimates, money_to_cents
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -50,6 +50,28 @@ class ComparisonTests(unittest.TestCase):
             flags["CEILINGS_EXCLUDED"]["vendor_name"],
             "Inland Pro Paint & Repair",
         )
+
+    def test_compares_three_estimates_in_one_matrix(self):
+        result = compare_many_estimates([
+            QUOTES / "synthetic-painting-estimate-blue-oak.pdf",
+            QUOTES / "synthetic-painting-estimate-inland-pro.pdf",
+            QUOTES / "synthetic-painting-proposal-canyon-view.pdf",
+        ])
+
+        self.assertEqual(len(result["vendors"]), 3)
+        self.assertEqual(len(result["scope_comparison"]["walls"]["values"]), 3)
+        totals = [vendor["total_cents"] for vendor in result["vendors"]]
+        self.assertEqual(result["price_range_cents"], max(totals) - min(totals))
+        self.assertIn(
+            result["lowest_bidder"],
+            [vendor["vendor_name"] for vendor in result["vendors"]],
+        )
+
+    def test_rejects_comparison_outside_supported_count(self):
+        with self.assertRaisesRegex(ValueError, "between 2 and 5"):
+            compare_many_estimates([
+                QUOTES / "synthetic-painting-estimate-blue-oak.pdf"
+            ])
 
 
 if __name__ == "__main__":

@@ -121,7 +121,20 @@ button, input, select { font: inherit; }
 }
 .trade-selector button.active { background: var(--green); border-color: var(--green); color: white; }
 .trade-description { color: var(--muted); font-size: 12px; margin: -7px 0 16px; }
-.upload-grid { display: grid; gap: 12px; grid-template-columns: 1fr 1fr; }
+.upload-heading { align-items: end; display: flex; justify-content: space-between; margin-bottom: 10px; }
+.upload-heading > div { display: flex; flex-direction: column; gap: 4px; }
+.upload-heading strong { font-size: 13px; }
+.upload-heading span { color: var(--muted); font-size: 11px; }
+.upload-heading button, .file-picker-heading button {
+  background: white;
+  border: 0;
+  color: var(--green);
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 0;
+}
+.upload-grid { display: grid; gap: 12px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .file-picker {
   background: #fafbf9;
   border: 1px solid var(--line-strong);
@@ -131,6 +144,8 @@ button, input, select { font: inherit; }
   padding: 18px;
 }
 .file-picker.has-file { background: var(--green-soft); border-color: #9bb8aa; }
+.file-picker-heading { align-items: center; display: flex; justify-content: space-between; }
+.file-picker-heading button { color: var(--muted); }
 .file-picker strong { font-size: 13px; }
 .file-picker > span {
   color: var(--muted);
@@ -161,24 +176,22 @@ button, input, select { font: inherit; }
 .demo-library-heading > div { display: flex; flex-direction: column; gap: 4px; }
 .demo-library-heading strong { font-size: 13px; }
 .demo-library-heading span, .sample-count { color: var(--muted); font-size: 12px; }
-.demo-controls { align-items: end; display: grid; gap: 10px; grid-template-columns: 1fr 1fr auto; }
-.demo-controls label {
-  color: var(--muted);
-  display: flex;
-  flex-direction: column;
-  font-size: 11px;
-  font-weight: 700;
-  gap: 6px;
-}
-.demo-controls select {
-  appearance: none;
+.demo-controls { align-items: end; display: flex; gap: 12px; justify-content: space-between; }
+.demo-options { display: flex; flex: 1; flex-wrap: wrap; gap: 8px; }
+.demo-options label {
+  align-items: center;
   background: white;
   border: 1px solid var(--line-strong);
-  color: var(--ink);
+  color: var(--muted);
   cursor: pointer;
-  font-size: 13px;
-  padding: 10px 30px 10px 10px;
+  display: inline-flex;
+  font-size: 11px;
+  font-weight: 700;
+  gap: 7px;
+  padding: 9px 10px;
 }
+.demo-options label:has(input:checked) { background: var(--green-soft); border-color: #9bb8aa; color: var(--green); }
+.demo-options input { accent-color: var(--green); margin: 0; }
 .demo-button {
   background: white;
   border: 1px solid var(--line-strong);
@@ -228,7 +241,7 @@ button, input, select { font: inherit; }
 }
 .difference-card span, .difference-card small { color: var(--muted); font-size: 11px; }
 .difference-card strong { font-size: 24px; letter-spacing: -.02em; margin: 3px 0; }
-.vendor-grid { border: 1px solid var(--line); display: grid; grid-template-columns: 1fr 1fr; }
+.vendor-grid { border: 1px solid var(--line); display: grid; overflow-x: auto; }
 .vendor-card { background: white; padding: 19px; }
 .vendor-card + .vendor-card { border-left: 1px solid var(--line); }
 .vendor-card span { color: var(--muted); font-size: 11px; font-weight: 700; }
@@ -237,7 +250,7 @@ button, input, select { font: inherit; }
 .vendor-card .unit-price { color: var(--muted); display: block; font-size: 11px; margin-top: 7px; }
 .results-panel { background: white; border: 1px solid var(--line); margin-top: 14px; overflow: hidden; padding: 20px; }
 .results-panel > h3 { font-size: 17px; margin: 0 0 16px; }
-.scope-table { border: 1px solid var(--line); overflow: hidden; }
+.scope-table { border: 1px solid var(--line); overflow-x: auto; }
 .scope-row { align-items: start; border-bottom: 1px solid var(--line); display: grid; gap: 16px; grid-template-columns: .72fr 1fr 1fr; padding: 14px 15px; }
 .scope-row:last-child { border-bottom: 0; }
 .scope-header { background: #f2f4f1; color: var(--muted); font-size: 10px; font-weight: 700; }
@@ -270,15 +283,15 @@ button, input, select { font: inherit; }
   .workspace, .results { padding-left: 18px; padding-right: 18px; }
   .upload-grid, .vendor-grid { grid-template-columns: 1fr; }
   .vendor-card + .vendor-card { border-left: 0; border-top: 1px solid var(--line); }
-  .demo-controls { grid-template-columns: 1fr; }
+  .demo-controls { align-items: stretch; flex-direction: column; }
+  .demo-button { align-self: flex-start; }
   .trade-selector { align-items: stretch; flex-direction: column; }
   .privacy-note { display: block; margin: 10px 0 0; }
   .section-heading { align-items: stretch; flex-direction: column; }
   .report-actions { align-items: stretch; flex-direction: column; }
   .report-actions .reset-button { margin-left: 0; }
   .difference-card { min-width: 0; }
-  .scope-row { grid-template-columns: 1fr; }
-  .scope-header { display: none; }
+  .scope-row { min-width: max-content; }
   .site-footer { margin-left: 18px; margin-right: 18px; }
 }
 

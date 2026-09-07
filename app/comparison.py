@@ -34,6 +34,14 @@ class EstimateComparison(TypedDict):
     risk_flags: list[RiskFlag]
 
 
+class MultiEstimateComparison(TypedDict):
+    vendors: list[VendorSummary]
+    price_range_cents: int | None
+    lowest_bidder: str | None
+    scope_comparison: dict[str, dict[str, Any]]
+    risk_flags: list[RiskFlag]
+
+
 def money_to_cents(value: str | None) -> int | None:
     """Convert a formatted dollar value such as '$4,750.00' into cents."""
     if value is None:
@@ -214,6 +222,155 @@ def _unit_price(
     return round(total_cents / quantity), label
 
 
+def _risk_flags_many(
+    estimates: list[NormalizedEstimate],
+    profile: TradeProfile,
+) -> list[RiskFlag]:
+    """Identify material differences across a group of estimates."""
+    flags: list[RiskFlag] = []
+
+    def add_lower_metric_flags(
+        field: str,
+        metric: str,
+        code: str,
+        severity: str,
+        message_template: str,
+    ) -> None:
+        measured = [
+            (estimate, estimate[field].get(metric))
+            for estimate in estimates
+            if estimate[field].get(metric) is not None
+        ]
+        if len(measured) < 2:
+            return
+        highest = max(value for _, value in measured)
+        for estimate, value in measured:
+            if value >= highest:
+                continue
+            flags.append({
+                "code": code,
+                "severity": severity,
+                "vendor_name": estimate["vendor_name"],
+                "message": message_template.format(value=value, highest=highest),
+                "evidence": estimate[field]["evidence"],
+            })
+
+    add_lower_metric_flags(
+        "labor_warranty",
+        "duration_years",
+        "SHORTER_LABOR_WARRANTY",
+        "medium",
+        "Includes a {value}-year labor warranty; the longest quoted term is {highest} years.",
+    )
+    if profile.key == "painting":
+        add_lower_metric_flags(
+            "walls",
+            "coat_count",
+            "FEWER_WALL_COATS",
+            "high",
+            "Includes {value} wall coat(s); another estimate includes {highest}.",
+        )
+    elif profile.key == "flooring":
+        add_lower_metric_flags(
+            "flooring_installation",
+            "area_sq_ft",
+            "FLOOR_AREA_MISMATCH",
+            "high",
+            "Prices {value:,} sq ft; the largest quoted area is {highest:,} sq ft.",
+        )
+        add_lower_metric_flags(
+            "flooring_installation",
+            "wear_layer_mil",
+            "LOWER_WEAR_LAYER",
+            "high",
+            "Specifies a {value} mil wear layer; another estimate specifies {highest} mil.",
+        )
+    elif profile.key == "plumbing":
+        add_lower_metric_flags(
+            "fixture_installation",
+            "fixture_count",
+            "FIXTURE_COUNT_MISMATCH",
+            "high",
+            "Prices {value} fixtures; the largest quoted fixture count is {highest}.",
+        )
+
+    for field, description in profile.risk_descriptions.items():
+        if not any(estimate[field]["status"] == "included" for estimate in estimates):
+            continue
+        for estimate in estimates:
+            status = estimate[field]["status"]
+            if status == "included":
+                continue
+            if status == "excluded":
+                message = f"Explicitly excludes {description}."
+                severity = "high"
+            elif status == "partial":
+                message = f"Includes only part of the requested {description} scope."
+                severity = "high"
+            elif status == "not_stated":
+                message = f"Does not clearly state whether {description} is included."
+                severity = "medium"
+            else:
+                message = f"Uses unclear or conditional language for {description}."
+                severity = "medium"
+            flags.append({
+                "code": f"{field.upper()}_{status.upper()}",
+                "severity": severity,
+                "vendor_name": estimate["vendor_name"],
+                "message": message,
+                "evidence": estimate[field]["evidence"],
+            })
+    return flags
+
+
+def compare_many_normalized_estimates(
+    estimates: list[NormalizedEstimate],
+    trade: str = "painting",
+) -> MultiEstimateComparison:
+    """Return one comparison for two through five normalized estimates."""
+    if not 2 <= len(estimates) <= 5:
+        raise ValueError("Comparisons require between 2 and 5 estimates.")
+
+    profile = get_trade_profile(trade)
+    totals = [money_to_cents(estimate["estimate_total"]) for estimate in estimates]
+    known_totals = [total for total in totals if total is not None]
+    price_range = (
+        max(known_totals) - min(known_totals)
+        if len(known_totals) >= 2
+        else None
+    )
+    lowest_bidder = None
+    if known_totals:
+        lowest_total = min(known_totals)
+        if known_totals.count(lowest_total) == 1:
+            lowest_bidder = estimates[totals.index(lowest_total)]["vendor_name"]
+
+    vendors: list[VendorSummary] = []
+    for estimate, total in zip(estimates, totals):
+        unit_price, unit_label = _unit_price(estimate, total, trade)
+        vendors.append({
+            "vendor_name": estimate["vendor_name"],
+            "estimate_total": estimate["estimate_total"],
+            "total_cents": total,
+            "unit_price_cents": unit_price,
+            "unit_label": unit_label,
+        })
+
+    return {
+        "vendors": vendors,
+        "price_range_cents": price_range,
+        "lowest_bidder": lowest_bidder,
+        "scope_comparison": {
+            field: {
+                "label": label,
+                "values": [estimate[field] for estimate in estimates],
+            }
+            for field, label in profile.scope_labels.items()
+        },
+        "risk_flags": _risk_flags_many(estimates, profile),
+    }
+
+
 def compare_normalized_estimates(
     first: NormalizedEstimate,
     second: NormalizedEstimate,
@@ -270,5 +427,19 @@ def compare_estimates(
     return compare_normalized_estimates(
         normalize_estimate(first_pdf, ai_extractor, trade),
         normalize_estimate(second_pdf, ai_extractor, trade),
+        trade,
+    )
+
+
+def compare_many_estimates(
+    pdf_paths: list[Path],
+    ai_extractor: "AIExtractor | None" = None,
+    trade: str = "painting",
+) -> MultiEstimateComparison:
+    """Normalize and compare two through five contractor estimate PDFs."""
+    if not 2 <= len(pdf_paths) <= 5:
+        raise ValueError("Comparisons require between 2 and 5 estimates.")
+    return compare_many_normalized_estimates(
+        [normalize_estimate(path, ai_extractor, trade) for path in pdf_paths],
         trade,
     )
