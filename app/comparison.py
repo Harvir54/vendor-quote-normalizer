@@ -3,6 +3,7 @@
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, TypedDict
 
+from app.bid_details import BidDetails
 from app.normalizer import NormalizedEstimate, normalize_estimate
 from app.trades import TradeProfile, get_trade_profile
 
@@ -16,6 +17,7 @@ class VendorSummary(TypedDict):
     total_cents: int | None
     unit_price_cents: int | None
     unit_label: str | None
+    bid_details: BidDetails
 
 
 class RiskFlag(TypedDict):
@@ -354,6 +356,7 @@ def compare_many_normalized_estimates(
             "total_cents": total,
             "unit_price_cents": unit_price,
             "unit_label": unit_label,
+            "bid_details": estimate["bid_details"],
         })
 
     return {
@@ -401,6 +404,7 @@ def compare_normalized_estimates(
                 "total_cents": first_cents,
                 "unit_price_cents": first_unit_price,
                 "unit_label": first_unit_label,
+                "bid_details": first["bid_details"],
             },
             {
                 "vendor_name": second["vendor_name"],
@@ -408,6 +412,7 @@ def compare_normalized_estimates(
                 "total_cents": second_cents,
                 "unit_price_cents": second_unit_price,
                 "unit_label": second_unit_label,
+                "bid_details": second["bid_details"],
             },
         ],
         "price_difference_cents": price_difference_cents,

@@ -25,6 +25,15 @@ type Comparison = {
     total_cents: number | null;
     unit_price_cents: number | null;
     unit_label: string | null;
+    bid_details: {
+      proposal_number: string | null;
+      issued_date: string | null;
+      valid_until: string | null;
+      contractor_license: string | null;
+      project_schedule: string | null;
+      payment_terms: string | null;
+      exclusions: string | null;
+    };
   }>;
   price_range_cents: number | null;
   lowest_bidder: string | null;
@@ -499,6 +508,7 @@ function Results({
                 {formatCents(vendor.unit_price_cents)} {vendor.unit_label}
               </small>
             )}
+            <BidDetails details={vendor.bid_details} />
           </article>
         ))}
       </div>
@@ -551,6 +561,40 @@ function Results({
         </div>
       </div>
     </section>
+  );
+}
+
+function BidDetails({
+  details,
+}: {
+  details: Comparison["vendors"][number]["bid_details"];
+}) {
+  const rows = [
+    ["Proposal", details.proposal_number],
+    ["Issued", details.issued_date],
+    ["Valid through", details.valid_until],
+    ["License", details.contractor_license],
+    ["Schedule", details.project_schedule],
+    ["Payment", details.payment_terms],
+    ["Exclusions", details.exclusions],
+  ].filter((row): row is [string, string] => row[1] !== null);
+
+  return (
+    <details className="bid-details">
+      <summary>Bid details</summary>
+      {rows.length === 0 ? (
+        <p>No additional contract details were found.</p>
+      ) : (
+        <dl>
+          {rows.map(([label, value]) => (
+            <div key={label}>
+              <dt>{label}</dt>
+              <dd>{value}</dd>
+            </div>
+          ))}
+        </dl>
+      )}
+    </details>
   );
 }
 

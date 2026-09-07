@@ -248,6 +248,12 @@ button, input, select { font: inherit; }
 .vendor-card h3 { font-size: 16px; margin: 9px 0 20px; }
 .vendor-card > strong { font-size: 25px; }
 .vendor-card .unit-price { color: var(--muted); display: block; font-size: 11px; margin-top: 7px; }
+.bid-details { border-top: 1px solid var(--line); margin-top: 16px; padding-top: 12px; }
+.bid-details summary { color: var(--green); cursor: pointer; font-size: 11px; font-weight: 700; }
+.bid-details dl { display: grid; gap: 10px; margin: 12px 0 0; }
+.bid-details dl > div { display: grid; gap: 3px; }
+.bid-details dt { color: var(--muted); font-size: 9px; font-weight: 700; text-transform: uppercase; }
+.bid-details dd, .bid-details p { font-size: 11px; line-height: 1.45; margin: 0; }
 .results-panel { background: white; border: 1px solid var(--line); margin-top: 14px; overflow: hidden; padding: 20px; }
 .results-panel > h3 { font-size: 17px; margin: 0 0 16px; }
 .scope-table { border: 1px solid var(--line); overflow-x: auto; }

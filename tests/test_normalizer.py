@@ -23,6 +23,15 @@ class NormalizerTests(unittest.TestCase):
                 "vendor_name": "Example Painting Co.",
                 "estimate_total": "$2,000.00",
                 "all_money_values": ["$500.00", "$2,000.00"],
+                "bid_details": {
+                    "proposal_number": None,
+                    "issued_date": None,
+                    "valid_until": None,
+                    "contractor_license": None,
+                    "project_schedule": None,
+                    "payment_terms": None,
+                    "exclusions": None,
+                },
                 "ceilings": {"status": "not_stated", "evidence": None, "source": "rule", "confidence": 0.70, "review_required": True},
                 "walls": {
                     "status": "included",
@@ -60,6 +69,9 @@ class NormalizerTests(unittest.TestCase):
         )
         self.assertEqual(result["vendor_name"], "Blue Oak Painting Co.")
         self.assertEqual(result["estimate_total"], "$4,750.00")
+        self.assertEqual(result["bid_details"]["proposal_number"], "BOP-260814")
+        self.assertEqual(result["bid_details"]["issued_date"], "August 14, 2026")
+        self.assertEqual(result["bid_details"]["contractor_license"], "SYN-1047281")
         self.assertIn("$300.00", result["all_money_values"])
         self.assertEqual(result["ceilings"]["status"], "included")
         self.assertEqual(result["walls"]["status"], "included")

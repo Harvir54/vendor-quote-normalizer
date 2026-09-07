@@ -3,6 +3,7 @@
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, cast
 
+from app.bid_details import extract_bid_details
 from app.pdf_text import (
     extract_pdf_text,
     find_estimate_total,
@@ -30,6 +31,7 @@ def normalize_estimate_text(
         "vendor_name": find_vendor_name(text),
         "estimate_total": find_estimate_total(text),
         "all_money_values": find_money_values(text),
+        "bid_details": extract_bid_details(text),
         **{
             field: classifier(text)
             for field, classifier in profile.classifiers.items()

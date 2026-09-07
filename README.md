@@ -24,6 +24,11 @@ normalizes trade-specific scope, compares two to five estimates, and displays
 evidence-backed risks in a web interface. Low-confidence wording can be
 interpreted by an optional, evidence-validated AI fallback.
 
+Every trade also extracts a compact set of shared bid details when stated:
+proposal number, issue date, validity, contractor license, project schedule,
+payment terms, and exclusions. These stay collapsed in the interface until a
+user chooses to review them.
+
 ## Prerequisites
 
 - Python 3.11 or newer
