@@ -14,6 +14,9 @@ type ScopeValue = {
   material_type?: string | null;
   wear_layer_mil?: number | null;
   thickness_mm?: number | null;
+  installation_method?: string | null;
+  waste_percent?: number | null;
+  material_order_sq_ft?: number | null;
   fixture_count?: number | null;
   fixture_types?: string[];
   manufacturer?: string | null;
@@ -641,6 +644,13 @@ function ScopeCell({ value }: { value: ScopeValue }) {
       )}
       {value.thickness_mm !== undefined && value.thickness_mm !== null && (
         <small>{value.thickness_mm} mm thickness</small>
+      )}
+      {value.installation_method && <small>{value.installation_method}</small>}
+      {value.waste_percent !== undefined && value.waste_percent !== null && (
+        <small>{value.waste_percent}% waste allowance</small>
+      )}
+      {value.material_order_sq_ft !== undefined && value.material_order_sq_ft !== null && (
+        <small>{value.material_order_sq_ft.toLocaleString()} sq ft ordered</small>
       )}
       {value.fixture_count !== undefined && value.fixture_count !== null && (
         <small>{value.fixture_count} fixtures</small>

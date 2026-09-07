@@ -11,6 +11,12 @@ class FlooringInstallationItem(ScopeItem):
     material_type: str | None
     wear_layer_mil: int | None
     thickness_mm: float | None
+    installation_method: str | None
+
+
+class WasteAllowanceItem(ScopeItem):
+    waste_percent: float | None
+    material_order_sq_ft: int | None
 
 
 class UnderlaymentItem(ScopeItem):
@@ -55,6 +61,7 @@ def classify_flooring_installation(text: str) -> FlooringInstallationItem:
             "material_type": None,
             "wear_layer_mil": None,
             "thickness_mm": None,
+            "installation_method": None,
         }
 
     evidence = evidence_options[0]
@@ -64,6 +71,17 @@ def classify_flooring_installation(text: str) -> FlooringInstallationItem:
         status = "excluded"
     elif any(term in lowered for term in ("if needed", "optional", "to be determined")):
         status = "unclear"
+
+    installation_method = next((
+        label
+        for label, terms in (
+            ("floating / click-lock", ("floating", "click-lock", "click lock")),
+            ("glue-down", ("glue-down", "glue down", "glued")),
+            ("nail-down", ("nail-down", "nail down", "nailed")),
+            ("staple-down", ("staple-down", "staple down", "stapled")),
+        )
+        if any(term in text.lower() for term in terms)
+    ), None)
 
     return {
         "status": status,
@@ -79,6 +97,7 @@ def classify_flooring_installation(text: str) -> FlooringInstallationItem:
             r"\b(\d+(?:\.\d+)?)\s*mm\b",
             decimal=True,
         ),
+        "installation_method": installation_method,
     }
 
 
@@ -134,3 +153,72 @@ def classify_baseboards(text: str) -> ScopeItem:
         r"\bbaseboards?\b|\bbase moulding\b|\bbase molding\b",
         ("baseboard", "base moulding", "base molding", "included", "install"),
     )
+
+
+def classify_moisture_testing(text: str) -> ScopeItem:
+    return _classify_simple_scope(
+        text,
+        r"\b(?:moisture test(?:ing)?|relative humidity test(?:ing)?|RH testing|"
+        r"calcium chloride test(?:ing)?)\b",
+        ("test", "testing", "included", "includes", "perform"),
+    )
+
+
+def classify_waste_allowance(text: str) -> WasteAllowanceItem:
+    options = _joined_evidence_options(
+        text,
+        r"\b\d+(?:\.\d+)?\s*%\s*(?:waste|overage)\b|"
+        r"\b(?:waste|overage)\s+(?:allowance|factor)\b|"
+        r"\b(?:material order|order quantity)\b",
+    )
+    if not options:
+        return {
+            "status": "not_stated",
+            "evidence": None,
+            "waste_percent": None,
+            "material_order_sq_ft": None,
+        }
+    evidence = options[0]
+    lowered = evidence.lower()
+    status = "excluded" if any(
+        term in lowered for term in ("not included", "excluded")
+    ) else "included"
+    return {
+        "status": status,
+        "evidence": evidence,
+        "waste_percent": _number(
+            evidence,
+            r"(\d+(?:\.\d+)?)\s*%\s*(?:waste|overage)",
+            decimal=True,
+        ),
+        "material_order_sq_ft": _number(
+            evidence,
+            r"(?:material order|order quantity)\D{0,12}([\d,]+)\s*"
+            r"(?:sq\.?\s*ft\.?|square feet|sf)\b",
+        ),
+    }
+
+
+def classify_acclimation(text: str) -> ScopeItem:
+    return _classify_simple_scope(
+        text,
+        r"\bacclimat(?:e|ed|es|ing|ion)\b|\bconditioning period\b",
+        ("acclimate", "acclimation", "conditioning", "included", "includes"),
+    )
+
+
+def classify_furniture_appliances(text: str) -> ScopeItem:
+    result = _classify_simple_scope(
+        text,
+        r"\b(?:move|moving|relocate|reset)\b.*\b(?:furniture|appliances?|toilets?)\b|"
+        r"\b(?:furniture|appliances?|toilets?)\b.*\b(?:move|moving|relocate|reset)\b",
+        ("move", "moving", "relocate", "reset", "included", "includes"),
+    )
+    evidence = result["evidence"]
+    if evidence and re.search(
+        r"\b(?:customer|owner|tenant)\b.*\b(?:must|responsible|to move)\b",
+        evidence,
+        re.IGNORECASE,
+    ):
+        return {"status": "excluded", "evidence": evidence}
+    return result

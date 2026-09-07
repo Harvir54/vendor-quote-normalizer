@@ -34,6 +34,11 @@ and fixed property, trim and doors, stated paint manufacturer/product/sheen,
 and lead-safety language. Secondary specifications remain collapsed by default
 so the main scope comparison stays concise.
 
+Flooring comparisons additionally retain the stated installation method,
+material-order quantity and waste allowance, moisture testing, acclimation,
+and responsibility for moving furniture, appliances, or toilets. These
+secondary installation details are collapsed by default.
+
 ## Prerequisites
 
 - Python 3.11 or newer
