@@ -19,6 +19,10 @@ type ScopeValue = {
   material_order_sq_ft?: number | null;
   fixture_count?: number | null;
   fixture_types?: string[];
+  project_types?: string[];
+  tankless?: boolean | null;
+  capacity_gallons?: number | null;
+  fuel_type?: string | null;
   manufacturer?: string | null;
   product_line?: string | null;
   sheens?: string[];
@@ -462,7 +466,9 @@ function Results({
 }) {
   const scopeRows = Object.entries(result.scope_comparison);
   const primaryScopeRows = scopeRows.filter(([, row]) => !row.detail);
-  const detailScopeRows = scopeRows.filter(([, row]) => row.detail);
+  const detailScopeRows = scopeRows.filter(
+    ([, row]) => row.detail && row.values.some((value) => value.status !== "not_stated"),
+  );
 
   function downloadResult() {
     const report = {
@@ -655,6 +661,15 @@ function ScopeCell({ value }: { value: ScopeValue }) {
       {value.fixture_count !== undefined && value.fixture_count !== null && (
         <small>{value.fixture_count} fixtures</small>
       )}
+      {value.project_types && value.project_types.length > 0 && (
+        <small>{value.project_types.join(", ")}</small>
+      )}
+      {value.tankless === true && <small>Tankless system</small>}
+      {value.tankless === false && <small>Tank system</small>}
+      {value.capacity_gallons !== undefined && value.capacity_gallons !== null && (
+        <small>{value.capacity_gallons}-gallon capacity</small>
+      )}
+      {value.fuel_type && <small>{value.fuel_type}</small>}
       {value.manufacturer && <small>{value.manufacturer}</small>}
       {value.product_line && <small>{value.product_line}</small>}
       {value.sheens && value.sheens.length > 0 && (

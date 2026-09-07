@@ -39,6 +39,12 @@ material-order quantity and waste allowance, moisture testing, acclimation,
 and responsibility for moving furniture, appliances, or toilets. These
 secondary installation details are collapsed by default.
 
+Plumbing comparisons identify fixture replacement, water-heater, repipe,
+sewer or drain replacement, leak-repair, and drain-cleaning work so unrelated
+bids are not presented as equivalent. When applicable, they also retain
+water-heater specifications, old-equipment removal, access restoration,
+camera inspection, and excavation details. Unused technical rows stay hidden.
+
 ## Prerequisites
 
 - Python 3.11 or newer

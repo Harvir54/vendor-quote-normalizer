@@ -34,13 +34,19 @@ from app.painting_scope import (
     classify_trim_and_doors,
 )
 from app.plumbing_scope import (
+    classify_access_restoration,
+    classify_camera_inspection,
     classify_drain_lines,
+    classify_excavation,
     classify_fixture_installation,
     classify_materials,
     classify_permit,
+    classify_plumbing_project,
+    classify_removal_disposal,
     classify_shutoff_valves,
     classify_supply_lines,
     classify_testing,
+    classify_water_heater,
 )
 
 
@@ -192,6 +198,7 @@ PLUMBING = TradeProfile(
     key="plumbing",
     label="Plumbing",
     scope_labels={
+        "plumbing_project": "Plumbing project type",
         "fixture_installation": "Fixture installation",
         "supply_lines": "Supply lines",
         "drain_lines": "Drain lines",
@@ -199,10 +206,16 @@ PLUMBING = TradeProfile(
         "permit": "Permit and inspection",
         "materials": "Materials and parts",
         "testing": "Pressure and leak testing",
+        "water_heater": "Water-heater specifications",
+        "removal_disposal": "Existing equipment removal",
+        "access_restoration": "Access and surface restoration",
+        "camera_inspection": "Camera inspection",
+        "excavation": "Excavation and backfill",
         "cleanup": "Cleanup",
         "labor_warranty": "Labor warranty",
     },
     classifiers={
+        "plumbing_project": classify_plumbing_project,
         "fixture_installation": classify_fixture_installation,
         "supply_lines": classify_supply_lines,
         "drain_lines": classify_drain_lines,
@@ -210,6 +223,11 @@ PLUMBING = TradeProfile(
         "permit": classify_permit,
         "materials": classify_materials,
         "testing": classify_testing,
+        "water_heater": classify_water_heater,
+        "removal_disposal": classify_removal_disposal,
+        "access_restoration": classify_access_restoration,
+        "camera_inspection": classify_camera_inspection,
+        "excavation": classify_excavation,
         "cleanup": classify_cleanup,
         "labor_warranty": classify_labor_warranty,
     },
@@ -220,12 +238,23 @@ PLUMBING = TradeProfile(
         "permit": "permit and inspection costs",
         "materials": "materials and parts",
         "testing": "pressure or leak testing",
+        "removal_disposal": "removal and disposal of existing equipment",
+        "access_restoration": "repair of opened walls, floors, or other surfaces",
         "cleanup": "cleanup",
         "labor_warranty": "a labor warranty",
     },
     ai_review_categories=(
-        "fixture_installation", "supply_lines", "drain_lines", "shutoff_valves",
-        "permit", "materials", "testing", "cleanup", "labor_warranty",
+        "plumbing_project", "fixture_installation", "supply_lines", "drain_lines",
+        "shutoff_valves", "permit", "materials", "testing", "water_heater",
+        "removal_disposal", "access_restoration", "camera_inspection",
+        "excavation", "cleanup", "labor_warranty",
+    ),
+    detail_fields=(
+        "water_heater",
+        "removal_disposal",
+        "access_restoration",
+        "camera_inspection",
+        "excavation",
     ),
 )
 

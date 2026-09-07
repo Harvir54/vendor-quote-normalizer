@@ -153,6 +153,21 @@ def _risk_flags(
             })
 
     if profile.key == "plumbing":
+        first_types = set(first["plumbing_project"]["project_types"])
+        second_types = set(second["plumbing_project"]["project_types"])
+        if first_types and second_types and first_types != second_types:
+            flags.append({
+                "code": "PLUMBING_PROJECT_TYPE_MISMATCH",
+                "severity": "high",
+                "vendor_name": None,
+                "message": (
+                    "The estimates describe different plumbing job types: "
+                    f"{', '.join(sorted(first_types))} versus "
+                    f"{', '.join(sorted(second_types))}. Confirm both bids cover the same project."
+                ),
+                "evidence": None,
+            })
+
         first_count = first["fixture_installation"]["fixture_count"]
         second_count = second["fixture_installation"]["fixture_count"]
         if first_count and second_count and first_count != second_count:
@@ -289,6 +304,23 @@ def _risk_flags_many(
             "Specifies a {value} mil wear layer; another estimate specifies {highest} mil.",
         )
     elif profile.key == "plumbing":
+        project_type_sets = {
+            tuple(sorted(estimate["plumbing_project"]["project_types"]))
+            for estimate in estimates
+            if estimate["plumbing_project"]["project_types"]
+        }
+        if len(project_type_sets) > 1:
+            descriptions = [", ".join(project_types) for project_types in sorted(project_type_sets)]
+            flags.append({
+                "code": "PLUMBING_PROJECT_TYPE_MISMATCH",
+                "severity": "high",
+                "vendor_name": None,
+                "message": (
+                    "The estimates describe different plumbing job types: "
+                    f"{'; '.join(descriptions)}. Confirm every bid covers the same project."
+                ),
+                "evidence": None,
+            })
         add_lower_metric_flags(
             "fixture_installation",
             "fixture_count",

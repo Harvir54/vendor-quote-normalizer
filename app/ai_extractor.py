@@ -35,12 +35,18 @@ ReviewCategory = Literal[
     "transitions",
     "baseboards",
     "fixture_installation",
+    "plumbing_project",
     "supply_lines",
     "drain_lines",
     "shutoff_valves",
     "permit",
     "materials",
     "testing",
+    "water_heater",
+    "removal_disposal",
+    "access_restoration",
+    "camera_inspection",
+    "excavation",
 ]
 ReviewStatus = Literal["included", "partial", "excluded", "not_stated", "unclear"]
 
