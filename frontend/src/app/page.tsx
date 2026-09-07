@@ -23,6 +23,13 @@ type ScopeValue = {
   tankless?: boolean | null;
   capacity_gallons?: number | null;
   fuel_type?: string | null;
+  system_types?: string[];
+  capacity_tons?: number | null;
+  model_numbers?: string[];
+  seer2?: number | null;
+  eer2?: number | null;
+  hspf2?: number | null;
+  afue_percent?: number | null;
   manufacturer?: string | null;
   product_line?: string | null;
   sheens?: string[];
@@ -115,6 +122,21 @@ const PLUMBING_DEMOS = [
   },
 ] as const;
 
+const HVAC_DEMOS = [
+  {
+    id: "summit-comfort",
+    name: "Summit Comfort Systems",
+    path: "/samples/synthetic-hvac-estimate-summit.pdf",
+    filename: "synthetic-hvac-estimate-summit.pdf",
+  },
+  {
+    id: "inland-air",
+    name: "Inland Air Solutions",
+    path: "/samples/synthetic-hvac-estimate-inland.pdf",
+    filename: "synthetic-hvac-estimate-inland.pdf",
+  },
+] as const;
+
 const TRADE_OPTIONS = [
   {
     key: "painting",
@@ -134,7 +156,15 @@ const TRADE_OPTIONS = [
     description: "Fixtures, supply and drain lines, valves, permits, and testing",
     demos: PLUMBING_DEMOS,
   },
+  {
+    key: "hvac",
+    label: "HVAC",
+    description: "System type, capacity, efficiency, equipment, ductwork, testing, and warranty",
+    demos: HVAC_DEMOS,
+  },
 ] as const;
+
+type TradeKey = (typeof TRADE_OPTIONS)[number]["key"];
 
 function formatCents(cents: number | null) {
   if (cents === null) return "Not available";
@@ -154,7 +184,7 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [engineStatus, setEngineStatus] = useState<EngineStatus>("checking");
-  const [trade, setTrade] = useState<"painting" | "flooring" | "plumbing">("painting");
+  const [trade, setTrade] = useState<TradeKey>("painting");
   const [selectedDemos, setSelectedDemos] = useState<string[]>([
     "blue-oak",
     "inland-pro",
@@ -181,7 +211,7 @@ export default function Home() {
     return () => controller.abort();
   }, []);
 
-  function changeTrade(nextTrade: "painting" | "flooring" | "plumbing") {
+  function changeTrade(nextTrade: TradeKey) {
     const nextDemos = TRADE_OPTIONS.find(({ key }) => key === nextTrade)?.demos ?? PAINTING_DEMOS;
     setTrade(nextTrade);
     setSelectedDemos(nextDemos.slice(0, 3).map(({ id }) => id));
@@ -670,6 +700,21 @@ function ScopeCell({ value }: { value: ScopeValue }) {
         <small>{value.capacity_gallons}-gallon capacity</small>
       )}
       {value.fuel_type && <small>{value.fuel_type}</small>}
+      {value.system_types && value.system_types.length > 0 && (
+        <small>{value.system_types.join(", ")}</small>
+      )}
+      {value.capacity_tons !== undefined && value.capacity_tons !== null && (
+        <small>{value.capacity_tons} ton capacity</small>
+      )}
+      {value.model_numbers && value.model_numbers.length > 0 && (
+        <small>Models: {value.model_numbers.join(", ")}</small>
+      )}
+      {value.seer2 !== undefined && value.seer2 !== null && <small>{value.seer2} SEER2</small>}
+      {value.eer2 !== undefined && value.eer2 !== null && <small>{value.eer2} EER2</small>}
+      {value.hspf2 !== undefined && value.hspf2 !== null && <small>{value.hspf2} HSPF2</small>}
+      {value.afue_percent !== undefined && value.afue_percent !== null && (
+        <small>{value.afue_percent}% AFUE</small>
+      )}
       {value.manufacturer && <small>{value.manufacturer}</small>}
       {value.product_line && <small>{value.product_line}</small>}
       {value.sheens && value.sheens.length > 0 && (

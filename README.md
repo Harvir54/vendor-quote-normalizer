@@ -45,6 +45,12 @@ bids are not presented as equivalent. When applicable, they also retain
 water-heater specifications, old-equipment removal, access restoration,
 camera inspection, and excavation details. Unused technical rows stay hidden.
 
+HVAC comparisons evaluate system configuration, capacity, current efficiency
+ratings, equipment models, ductwork, controls, permits, commissioning, removal,
+and warranty. They also surface load calculations, AHRI matched-system
+documentation, electrical work, refrigerant lines, and condensate protection
+when those details are stated, while keeping that technical layer collapsed.
+
 ## Prerequisites
 
 - Python 3.11 or newer

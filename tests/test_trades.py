@@ -22,6 +22,7 @@ class TradeProfileTests(unittest.TestCase):
                 {"key": "painting", "label": "Interior painting"},
                 {"key": "flooring", "label": "Flooring"},
                 {"key": "plumbing", "label": "Plumbing"},
+                {"key": "hvac", "label": "HVAC"},
             ],
         )
 

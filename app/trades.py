@@ -48,6 +48,21 @@ from app.plumbing_scope import (
     classify_testing,
     classify_water_heater,
 )
+from app.hvac_scope import (
+    classify_commissioning as classify_hvac_commissioning,
+    classify_condensate,
+    classify_ductwork,
+    classify_electrical,
+    classify_hvac_efficiency,
+    classify_hvac_equipment,
+    classify_hvac_system,
+    classify_load_calculation,
+    classify_matched_system,
+    classify_permit as classify_hvac_permit,
+    classify_refrigerant_lines,
+    classify_removal_disposal as classify_hvac_removal_disposal,
+    classify_thermostat,
+)
 
 
 ScopeClassifier = Callable[[str], ScopeItem]
@@ -258,7 +273,72 @@ PLUMBING = TradeProfile(
     ),
 )
 
-TRADE_PROFILES = {profile.key: profile for profile in (PAINTING, FLOORING, PLUMBING)}
+HVAC = TradeProfile(
+    key="hvac",
+    label="HVAC",
+    scope_labels={
+        "hvac_system": "System type and capacity",
+        "hvac_equipment": "Equipment and model numbers",
+        "hvac_efficiency": "Efficiency ratings",
+        "ductwork": "Ductwork",
+        "thermostat": "Thermostat and controls",
+        "permit": "Permit and inspection",
+        "commissioning": "Startup and system testing",
+        "removal_disposal": "Old equipment removal",
+        "load_calculation": "Load calculation and sizing",
+        "matched_system": "AHRI matched-system documentation",
+        "electrical": "Electrical work",
+        "refrigerant_lines": "Refrigerant line set",
+        "condensate": "Condensate drainage and protection",
+        "cleanup": "Cleanup",
+        "labor_warranty": "Labor warranty",
+    },
+    classifiers={
+        "hvac_system": classify_hvac_system,
+        "hvac_equipment": classify_hvac_equipment,
+        "hvac_efficiency": classify_hvac_efficiency,
+        "ductwork": classify_ductwork,
+        "thermostat": classify_thermostat,
+        "permit": classify_hvac_permit,
+        "commissioning": classify_hvac_commissioning,
+        "removal_disposal": classify_hvac_removal_disposal,
+        "load_calculation": classify_load_calculation,
+        "matched_system": classify_matched_system,
+        "electrical": classify_electrical,
+        "refrigerant_lines": classify_refrigerant_lines,
+        "condensate": classify_condensate,
+        "cleanup": classify_cleanup,
+        "labor_warranty": classify_labor_warranty,
+    },
+    risk_descriptions={
+        "ductwork": "needed ductwork",
+        "thermostat": "a thermostat or controls",
+        "permit": "permit and inspection costs",
+        "commissioning": "system startup and performance testing",
+        "removal_disposal": "removal and disposal of old equipment",
+        "load_calculation": "a documented load calculation",
+        "matched_system": "AHRI matched-system documentation",
+        "electrical": "required electrical work",
+        "refrigerant_lines": "refrigerant line-set work",
+        "condensate": "condensate drainage and protection",
+        "cleanup": "cleanup",
+        "labor_warranty": "a labor warranty",
+    },
+    ai_review_categories=(
+        "hvac_system", "hvac_equipment", "hvac_efficiency", "ductwork",
+        "thermostat", "permit", "commissioning", "removal_disposal",
+        "load_calculation", "matched_system", "electrical",
+        "refrigerant_lines", "condensate", "cleanup", "labor_warranty",
+    ),
+    detail_fields=(
+        "hvac_equipment", "hvac_efficiency", "load_calculation",
+        "matched_system", "electrical", "refrigerant_lines", "condensate",
+    ),
+)
+
+TRADE_PROFILES = {
+    profile.key: profile for profile in (PAINTING, FLOORING, PLUMBING, HVAC)
+}
 
 
 class UnsupportedTradeError(ValueError):

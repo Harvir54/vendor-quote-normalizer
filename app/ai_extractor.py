@@ -47,6 +47,17 @@ ReviewCategory = Literal[
     "access_restoration",
     "camera_inspection",
     "excavation",
+    "hvac_system",
+    "hvac_equipment",
+    "hvac_efficiency",
+    "ductwork",
+    "thermostat",
+    "commissioning",
+    "load_calculation",
+    "matched_system",
+    "electrical",
+    "refrigerant_lines",
+    "condensate",
 ]
 ReviewStatus = Literal["included", "partial", "excluded", "not_stated", "unclear"]
 

@@ -183,6 +183,51 @@ def _risk_flags(
                 "evidence": lower["fixture_installation"]["evidence"],
             })
 
+    if profile.key == "hvac":
+        first_types = set(first["hvac_system"]["system_types"])
+        second_types = set(second["hvac_system"]["system_types"])
+        if first_types and second_types and first_types != second_types:
+            flags.append({
+                "code": "HVAC_SYSTEM_TYPE_MISMATCH",
+                "severity": "high",
+                "vendor_name": None,
+                "message": (
+                    "The estimates specify different HVAC system configurations: "
+                    f"{', '.join(sorted(first_types))} versus "
+                    f"{', '.join(sorted(second_types))}. Confirm they solve the same need."
+                ),
+                "evidence": None,
+            })
+
+        first_capacity = first["hvac_system"]["capacity_tons"]
+        second_capacity = second["hvac_system"]["capacity_tons"]
+        if first_capacity and second_capacity and first_capacity != second_capacity:
+            flags.append({
+                "code": "HVAC_CAPACITY_MISMATCH",
+                "severity": "high",
+                "vendor_name": None,
+                "message": (
+                    f"The estimates specify {first_capacity:g}-ton and {second_capacity:g}-ton "
+                    "systems. Confirm the intended capacity and sizing calculation."
+                ),
+                "evidence": None,
+            })
+
+        first_seer2 = first["hvac_efficiency"]["seer2"]
+        second_seer2 = second["hvac_efficiency"]["seer2"]
+        if first_seer2 and second_seer2 and first_seer2 != second_seer2:
+            lower = first if first_seer2 < second_seer2 else second
+            flags.append({
+                "code": "LOWER_SEER2",
+                "severity": "medium",
+                "vendor_name": lower["vendor_name"],
+                "message": (
+                    f"Specifies {min(first_seer2, second_seer2):g} SEER2, compared with "
+                    f"{max(first_seer2, second_seer2):g} SEER2 in the other estimate."
+                ),
+                "evidence": lower["hvac_efficiency"]["evidence"],
+            })
+
     for field, description in profile.risk_descriptions.items():
         statuses = [estimate[field]["status"] for estimate in estimates]
         for index, estimate in enumerate(estimates):
@@ -327,6 +372,43 @@ def _risk_flags_many(
             "FIXTURE_COUNT_MISMATCH",
             "high",
             "Prices {value} fixtures; the largest quoted fixture count is {highest}.",
+        )
+    elif profile.key == "hvac":
+        system_type_sets = {
+            tuple(sorted(estimate["hvac_system"]["system_types"]))
+            for estimate in estimates
+            if estimate["hvac_system"]["system_types"]
+        }
+        if len(system_type_sets) > 1:
+            descriptions = [", ".join(types) for types in sorted(system_type_sets)]
+            flags.append({
+                "code": "HVAC_SYSTEM_TYPE_MISMATCH",
+                "severity": "high",
+                "vendor_name": None,
+                "message": (
+                    "The estimates specify different HVAC system configurations: "
+                    f"{'; '.join(descriptions)}. Confirm every bid solves the same need."
+                ),
+                "evidence": None,
+            })
+
+        capacities = {
+            estimate["hvac_system"]["capacity_tons"]
+            for estimate in estimates
+            if estimate["hvac_system"]["capacity_tons"] is not None
+        }
+        if len(capacities) > 1:
+            labels = ", ".join(f"{capacity:g}-ton" for capacity in sorted(capacities))
+            flags.append({
+                "code": "HVAC_CAPACITY_MISMATCH",
+                "severity": "high",
+                "vendor_name": None,
+                "message": f"The estimates specify different capacities ({labels}). Confirm system sizing.",
+                "evidence": None,
+            })
+        add_lower_metric_flags(
+            "hvac_efficiency", "seer2", "LOWER_SEER2", "medium",
+            "Specifies {value:g} SEER2; the highest quoted efficiency is {highest:g} SEER2.",
         )
 
     for field, description in profile.risk_descriptions.items():
