@@ -32,6 +32,7 @@ def classify_hvac_system(text: str) -> HVACSystemItem:
     definitions = (
         ("central air conditioner", r"\b(?:central air conditioner|air conditioning system|AC system|A/C system)\b"),
         ("heat pump", r"\bheat pump\b"),
+        ("geothermal heat pump", r"\b(?:geothermal|ground[- ]source)\b"),
         ("gas furnace", r"\b(?:gas furnace|furnace)\b"),
         ("ductless mini-split", r"\b(?:ductless|mini[- ]split)\b"),
         ("packaged system", r"\b(?:packaged unit|package unit|rooftop unit)\b"),
@@ -40,6 +41,8 @@ def classify_hvac_system(text: str) -> HVACSystemItem:
     system_types = [
         label for label, pattern in definitions if re.search(pattern, text, re.IGNORECASE)
     ]
+    if "geothermal heat pump" in system_types and "heat pump" in system_types:
+        system_types.remove("heat pump")
     evidence_options = _joined_evidence_options(
         text, "|".join(f"(?:{pattern})" for _, pattern in definitions)
     )

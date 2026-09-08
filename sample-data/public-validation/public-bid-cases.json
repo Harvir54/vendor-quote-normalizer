@@ -1,0 +1,59 @@
+[
+  {
+    "id": "public-painting-bid-tab-2025",
+    "trade": "painting",
+    "document_family": "bid_tabulation",
+    "source_url": "https://files-backend.assets.thrillshare.com/documents/asset/uploaded_file/4929/Ccs/1238eeba-4ed9-4953-96cf-55c532a7c5f2/Bid-Tabulation-MWM-Interior-2025.pdf?disposition=inline",
+    "accessed_date": "2026-09-07",
+    "source_owner": "Cumberland County Schools",
+    "content_handling": "Selected public table cells transcribed; contractor and staff names removed.",
+    "text": "Painting Restoration Project for Several Schools\nInterior painting\nContractor A\nBase Bid $263,074.00",
+    "expected": {
+      "estimate_total": "$263,074.00",
+      "all_money_values": ["$263,074.00"]
+    }
+  },
+  {
+    "id": "public-flooring-bid-tab-2024",
+    "trade": "flooring",
+    "document_family": "scanned_bid_tabulation",
+    "source_url": "https://aphanj.org/?download_id=16917&sdm_process_download=1",
+    "accessed_date": "2026-09-07",
+    "source_owner": "Asbury Park Housing Authority",
+    "content_handling": "Selected handwritten public table cells manually transcribed; bidder and staff names removed.",
+    "text": "Common Areas Flooring Replacement\nBidder A\nAmount of Bid $180,000.00\nUnit price $5.75 sq ft",
+    "expected": {
+      "estimate_total": "$180,000.00",
+      "all_money_values": ["$180,000.00", "$5.75"]
+    }
+  },
+  {
+    "id": "public-plumbing-rate-tab-2026",
+    "trade": "plumbing",
+    "document_family": "service_rate_tabulation",
+    "source_url": "https://resources.finalsite.net/images/v1773671335/cpsk12org/w1a01ajbhpk9cqysz4c3/C27008-Plumbing-Services-Bid-Tab.pdf",
+    "accessed_date": "2026-09-07",
+    "source_owner": "Columbia Public School District",
+    "content_handling": "Selected public rate cells transcribed; vendor location and name removed.",
+    "text": "Plumbing Services\nVendor A\nHourly Rate $92.75\nOvertime Rate $140.00\nMaterial markup 18.00%",
+    "expected": {
+      "estimate_total": null,
+      "all_money_values": ["$92.75", "$140.00"]
+    }
+  },
+  {
+    "id": "public-hvac-geothermal-tab-2026",
+    "trade": "hvac",
+    "document_family": "bid_tabulation",
+    "source_url": "https://www.pdhp.org/wp-content/uploads/2026/02/BidTab_2026-Geothermal.pdf",
+    "accessed_date": "2026-09-07",
+    "source_owner": "Park District of Highland Park",
+    "content_handling": "One public bid column manually transcribed; vendor and staff names removed.",
+    "text": "Replacement of Geothermal HVAC Unit\n10 Ton Replacement Unit and Installation Materials $31,600.00\nInstallation Labor $18,500.00\nTotal Base Bid $50,100.00\nAlternate 1: Extended Warranty $1,500.00",
+    "expected": {
+      "estimate_total": "$50,100.00",
+      "hvac_system": {"status": "included", "system_types": ["geothermal heat pump"], "capacity_tons": 10},
+      "all_money_values": ["$31,600.00", "$18,500.00", "$50,100.00", "$1,500.00"]
+    }
+  }
+]

@@ -12,6 +12,7 @@ and risk. Every classification retains the contractor's original wording.
 - `sample-data/quotes/` - anonymized or synthetic contractor estimates
 - `sample-data/ground-truth/` - human-verified expected results
 - `sample-data/evaluation/` - curated cross-trade wording and edge cases
+- `sample-data/public-validation/` - anonymized excerpts from cited public bid records
 - `research/` - interviews, market research, and validation notes
 - `tests/` - automated tests and evaluation cases
 
@@ -133,6 +134,12 @@ The evaluator checks every expected field value, reports any failure with its
 case ID and actual value, and exits unsuccessfully when a regression is found.
 Use `.venv/bin/python -m scripts.evaluate_accuracy --json` for machine-readable
 results.
+
+Run the separate public-source validation set with `make evaluate-public`.
+These records come from government bid tabulations and retain source URLs and
+access dates, but remove contractor and staff identities. Because bid tabs
+usually omit detailed scope, they validate public-document layouts and pricing
+labels rather than the full residential scope schema.
 
 Check frontend code quality:
 

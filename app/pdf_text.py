@@ -80,7 +80,8 @@ def find_money_values(text: str) -> list[str]:
 def find_estimate_total(text: str) -> str | None:
     total_pattern = (
         r"(?:ESTIMATE\s+TOTAL|ESTIMATED\s+TOTAL|PROPOSAL\s+TOTAL|"
-        r"QUOTE\s+TOTAL|GRAND\s+TOTAL)\s*"
+        r"QUOTE\s+TOTAL|GRAND\s+TOTAL|TOTAL\s+BASE\s+BID|BASE\s+BID|"
+        r"AMOUNT\s+OF\s+BID)\s*"
         r"(\$[\d,]+\.\d{2})"
     )
 

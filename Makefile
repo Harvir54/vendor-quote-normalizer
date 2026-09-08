@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := help
 
-.PHONY: help setup api web test evaluate lint build
+.PHONY: help setup api web test evaluate evaluate-public lint build
 
 help:
 	@echo "Available commands:"
@@ -9,6 +9,7 @@ help:
 	@echo "  make web    Start the React frontend"
 	@echo "  make test   Run backend tests"
 	@echo "  make evaluate  Measure curated extraction accuracy"
+	@echo "  make evaluate-public  Validate anonymized public bid records"
 	@echo "  make lint   Check frontend code quality"
 	@echo "  make build  Build the production frontend"
 
@@ -29,6 +30,9 @@ test:
 
 evaluate:
 	.venv/bin/python -m scripts.evaluate_accuracy
+
+evaluate-public:
+	.venv/bin/python -m scripts.evaluate_accuracy --cases-dir sample-data/public-validation
 
 lint:
 	cd frontend && pnpm lint
