@@ -123,6 +123,17 @@ Run all backend tests:
 make test
 ```
 
+Measure curated extraction accuracy overall and by trade:
+
+```bash
+make evaluate
+```
+
+The evaluator checks every expected field value, reports any failure with its
+case ID and actual value, and exits unsuccessfully when a regression is found.
+Use `.venv/bin/python -m scripts.evaluate_accuracy --json` for machine-readable
+results.
+
 Check frontend code quality:
 
 ```bash

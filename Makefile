@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := help
 
-.PHONY: help setup api web test lint build
+.PHONY: help setup api web test evaluate lint build
 
 help:
 	@echo "Available commands:"
@@ -8,6 +8,7 @@ help:
 	@echo "  make api    Start the FastAPI backend"
 	@echo "  make web    Start the React frontend"
 	@echo "  make test   Run backend tests"
+	@echo "  make evaluate  Measure curated extraction accuracy"
 	@echo "  make lint   Check frontend code quality"
 	@echo "  make build  Build the production frontend"
 
@@ -25,6 +26,9 @@ web:
 
 test:
 	.venv/bin/python -m unittest discover -s tests -v
+
+evaluate:
+	.venv/bin/python -m scripts.evaluate_accuracy
 
 lint:
 	cd frontend && pnpm lint
