@@ -4,12 +4,8 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, cast
 
 from app.bid_details import extract_bid_details
-from app.pdf_text import (
-    extract_pdf_text,
-    find_estimate_total,
-    find_money_values,
-    find_vendor_name,
-)
+from app.document_text import extract_document_text
+from app.pdf_text import find_estimate_total, find_money_values, find_vendor_name
 from app.scope import ScopeItem
 from app.trades import get_trade_profile
 
@@ -74,13 +70,13 @@ def _rule_confidence(item: ScopeItem) -> float:
 
 
 def normalize_estimate(
-    pdf_path: Path,
+    document_path: Path,
     ai_extractor: "AIExtractor | None" = None,
     trade: str = "painting",
 ) -> NormalizedEstimate:
-    """Extract PDF text and return its normalized estimate fields."""
+    """Extract document text and return its normalized estimate fields."""
     return normalize_estimate_text(
-        extract_pdf_text(pdf_path, ai_extractor),
+        extract_document_text(document_path, ai_extractor),
         ai_extractor,
         trade,
     )

@@ -1,5 +1,6 @@
 """Interpret low-confidence estimate scope using structured model output."""
 
+import base64
 import os
 from contextlib import suppress
 from pathlib import Path
@@ -180,6 +181,50 @@ class OpenAIExtractor:
             if uploaded_file is not None:
                 with suppress(Exception):
                     self.client.files.delete(uploaded_file.id)
+
+    def transcribe_image(self, image_path: Path) -> str:
+        """Transcribe a JPEG, PNG, or converted HEIC estimate with vision."""
+        suffix = image_path.suffix.lower()
+        image_bytes = image_path.read_bytes()
+        media_type = "image/png" if suffix == ".png" else "image/jpeg"
+        if suffix in {".heic", ".heif"}:
+            from io import BytesIO
+
+            from PIL import Image
+            from pillow_heif import register_heif_opener
+
+            register_heif_opener()
+            with Image.open(image_path) as image:
+                converted = BytesIO()
+                image.convert("RGB").save(converted, format="JPEG", quality=92)
+                image_bytes = converted.getvalue()
+        encoded = base64.b64encode(image_bytes).decode("ascii")
+        try:
+            response = self.client.responses.create(
+                model=os.getenv("OPENAI_OCR_MODEL", self.model),
+                input=[{
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "input_image",
+                            "image_url": f"data:{media_type};base64,{encoded}",
+                            "detail": "original",
+                        },
+                        {
+                            "type": "input_text",
+                            "text": (
+                                "Transcribe all visible text in this contractor estimate. "
+                                "Preserve reading order, line breaks, prices, quantities, "
+                                "headings, exclusions, and warranty terms. Do not summarize, "
+                                "correct, infer, or add text. Return only the transcription."
+                            ),
+                        },
+                    ],
+                }],
+            )
+            return response.output_text
+        except Exception as exc:
+            raise AIExtractionUnavailable("AI OCR is temporarily unavailable.") from exc
 
 
 def configured_ai_extractor() -> OpenAIExtractor | None:

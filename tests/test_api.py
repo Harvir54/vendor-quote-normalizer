@@ -1,9 +1,11 @@
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from fastapi.testclient import TestClient
 
 from app.api import app
+from app.ai_extractor import AIExtractionBatch
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -88,13 +90,66 @@ class ApiTests(unittest.TestCase):
         self.assertEqual(response.status_code, 400)
         self.assertIn("between 2 and 5", response.json()["detail"])
 
-    def test_rejects_non_pdf_upload(self):
+    def test_rejects_unsupported_upload(self):
         response = CLIENT.post(
             "/estimates/normalize",
             files={"estimate": ("quote.txt", b"not a PDF", "text/plain")},
         )
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.json()["detail"], "Only PDF files are supported.")
+        self.assertIn("Supported files are PDF", response.json()["detail"])
+
+    def test_rejects_file_with_mismatched_extension(self):
+        response = CLIENT.post(
+            "/estimates/normalize",
+            files={"estimate": ("quote.jpg", b"not an image", "image/jpeg")},
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("do not match", response.json()["detail"])
+
+    def test_image_requires_configured_ocr(self):
+        with patch("app.api.configured_ai_extractor", return_value=None):
+            response = CLIENT.post(
+                "/estimates/normalize",
+                files={
+                    "estimate": (
+                        "quote.png",
+                        b"\x89PNG\r\n\x1a\nplaceholder",
+                        "image/png",
+                    )
+                },
+            )
+        self.assertEqual(response.status_code, 422)
+        self.assertIn("require AI OCR", response.json()["detail"])
+
+    def test_normalizes_image_with_configured_ocr(self):
+        class FakeImageExtractor:
+            def transcribe_image(self, image_path):
+                self.suffix = image_path.suffix
+                return (
+                    "Pixel Plumbing Co.\nESTIMATE\n"
+                    "Water heater included\nESTIMATE TOTAL $3,250.00"
+                )
+
+            def classify(self, estimate_text, categories):
+                return AIExtractionBatch(classifications=[])
+
+        extractor = FakeImageExtractor()
+        with patch("app.api.configured_ai_extractor", return_value=extractor):
+            response = CLIENT.post(
+                "/estimates/normalize",
+                data={"trade": "plumbing"},
+                files={
+                    "estimate": (
+                        "quote.jpg",
+                        b"\xff\xd8\xffplaceholder",
+                        "image/jpeg",
+                    )
+                },
+            )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["vendor_name"], "Pixel Plumbing Co.")
+        self.assertEqual(response.json()["estimate_total"], "$3,250.00")
+        self.assertEqual(extractor.suffix, ".jpg")
 
     def test_rejects_unsupported_trade(self):
         path = QUOTES / "synthetic-painting-estimate-blue-oak.pdf"

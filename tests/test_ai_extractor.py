@@ -144,6 +144,26 @@ class AIExtractorTests(unittest.TestCase):
         content = client.responses.request["input"][0]["content"]
         self.assertEqual(content[0]["file_id"], "file-test")
 
+    def test_transcribes_image_as_inline_vision_input(self):
+        class FakeResponses:
+            def create(self, **kwargs):
+                self.request = kwargs
+                return SimpleNamespace(output_text="ACME IMAGE QUOTE\nTOTAL $725.00")
+
+        responses = FakeResponses()
+        client = SimpleNamespace(responses=responses)
+        extractor = OpenAIExtractor(client=client, model="test-model")
+        with NamedTemporaryFile(suffix=".jpg") as temporary_image:
+            temporary_image.write(b"\xff\xd8\xfftest-image")
+            temporary_image.flush()
+            result = extractor.transcribe_image(Path(temporary_image.name))
+
+        self.assertEqual(result, "ACME IMAGE QUOTE\nTOTAL $725.00")
+        content = responses.request["input"][0]["content"]
+        self.assertEqual(content[0]["type"], "input_image")
+        self.assertTrue(content[0]["image_url"].startswith("data:image/jpeg;base64,"))
+        self.assertEqual(content[0]["detail"], "original")
+
 
 if __name__ == "__main__":
     unittest.main()

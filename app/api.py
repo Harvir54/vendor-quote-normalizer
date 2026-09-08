@@ -1,4 +1,4 @@
-"""HTTP API for normalizing and comparing contractor estimate PDFs."""
+"""HTTP API for normalizing and comparing contractor estimate documents."""
 
 from pathlib import Path
 from tempfile import NamedTemporaryFile
@@ -13,11 +13,20 @@ from app.pdf_text import PdfExtractionError
 from app.trades import UnsupportedTradeError, get_trade_profile, supported_trades
 
 
-MAX_FILE_SIZE = 10 * 1024 * 1024
+MAX_PDF_SIZE = 10 * 1024 * 1024
+MAX_IMAGE_SIZE = 8 * 1024 * 1024
+SUPPORTED_UPLOADS = {
+    ".pdf": MAX_PDF_SIZE,
+    ".jpg": MAX_IMAGE_SIZE,
+    ".jpeg": MAX_IMAGE_SIZE,
+    ".png": MAX_IMAGE_SIZE,
+    ".heic": MAX_IMAGE_SIZE,
+    ".heif": MAX_IMAGE_SIZE,
+}
 
 app = FastAPI(
     title="Vendor Quote Normalizer API",
-    description="Normalize and compare contractor estimate PDFs.",
+    description="Normalize and compare contractor estimate PDFs and images.",
     version="0.1.0",
 )
 
@@ -40,22 +49,50 @@ def health_check() -> dict[str, object]:
     }
 
 
-async def _save_uploaded_pdf(upload: UploadFile) -> Path:
-    """Validate an uploaded PDF and save it temporarily for processing."""
+def _matches_signature(suffix: str, content: bytes) -> bool:
+    if suffix == ".pdf":
+        return content.startswith(b"%PDF")
+    if suffix in {".jpg", ".jpeg"}:
+        return content.startswith(b"\xff\xd8\xff")
+    if suffix == ".png":
+        return content.startswith(b"\x89PNG\r\n\x1a\n")
+    if suffix in {".heic", ".heif"}:
+        return len(content) >= 12 and content[4:8] == b"ftyp" and content[8:12] in {
+            b"heic", b"heix", b"hevc", b"hevx", b"mif1", b"msf1"
+        }
+    return False
+
+
+async def _save_uploaded_document(upload: UploadFile) -> Path:
+    """Validate an uploaded document and save it temporarily for processing."""
     filename = upload.filename or ""
-    if not filename.lower().endswith(".pdf"):
-        raise HTTPException(status_code=400, detail="Only PDF files are supported.")
+    suffix = Path(filename).suffix.lower()
+    if suffix not in SUPPORTED_UPLOADS:
+        raise HTTPException(
+            status_code=400,
+            detail="Supported files are PDF, JPG, JPEG, PNG, HEIC, and HEIF.",
+        )
 
     content = await upload.read()
     if not content:
-        raise HTTPException(status_code=400, detail="The uploaded PDF is empty.")
-    if len(content) > MAX_FILE_SIZE:
+        raise HTTPException(status_code=400, detail="The uploaded document is empty.")
+    size_limit = SUPPORTED_UPLOADS[suffix]
+    if len(content) > size_limit:
         raise HTTPException(
             status_code=413,
-            detail="The uploaded PDF exceeds the 10 MB limit.",
+            detail=(
+                "The uploaded PDF exceeds the 10 MB limit."
+                if suffix == ".pdf"
+                else "The uploaded image exceeds the 8 MB limit."
+            ),
+        )
+    if not _matches_signature(suffix, content):
+        raise HTTPException(
+            status_code=400,
+            detail="The file contents do not match its extension.",
         )
 
-    with NamedTemporaryFile(delete=False, suffix=".pdf") as temporary_file:
+    with NamedTemporaryFile(delete=False, suffix=suffix) as temporary_file:
         temporary_file.write(content)
         return Path(temporary_file.name)
 
@@ -75,7 +112,7 @@ async def normalize_uploaded_estimate(
         get_trade_profile(trade)
     except UnsupportedTradeError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
-    temporary_path = await _save_uploaded_pdf(estimate)
+    temporary_path = await _save_uploaded_document(estimate)
     try:
         return normalize_estimate(
             temporary_path,
@@ -99,9 +136,9 @@ async def compare_uploaded_estimates(
         get_trade_profile(trade)
     except UnsupportedTradeError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
-    first_path = await _save_uploaded_pdf(first_estimate)
+    first_path = await _save_uploaded_document(first_estimate)
     try:
-        second_path = await _save_uploaded_pdf(second_estimate)
+        second_path = await _save_uploaded_document(second_estimate)
     except Exception:
         _delete_temporary_files(first_path)
         raise
@@ -132,13 +169,13 @@ async def compare_many_uploaded_estimates(
     if not 2 <= len(estimates) <= 5:
         raise HTTPException(
             status_code=400,
-            detail="Upload between 2 and 5 PDF estimates.",
+            detail="Upload between 2 and 5 estimate documents.",
         )
 
     temporary_paths: list[Path] = []
     try:
         for estimate in estimates:
-            temporary_paths.append(await _save_uploaded_pdf(estimate))
+            temporary_paths.append(await _save_uploaded_document(estimate))
         return compare_many_estimates(
             temporary_paths,
             configured_ai_extractor(),
