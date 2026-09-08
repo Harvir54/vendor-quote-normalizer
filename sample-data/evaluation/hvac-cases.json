@@ -1,0 +1,42 @@
+[
+  {
+    "id": "hvac-matched-heat-pump",
+    "trade": "hvac",
+    "text": "Comfort First HVAC\nESTIMATE TOTAL $13,750.00\nInstall 3-ton heat pump and air handler rated 17 SEER2, 11.7 EER2, and 8.5 HSPF2. Manufacturer: Trane. Outdoor model 4TWR7036A1000. AHRI matched-system certificate included. Manual J load calculation included. Startup and airflow testing included.",
+    "expected": {
+      "hvac_system": {"status": "included", "system_types": ["heat pump", "air handler"], "capacity_tons": 3},
+      "hvac_efficiency": {"status": "included", "seer2": 17, "eer2": 11.7, "hspf2": 8.5},
+      "hvac_equipment": {"status": "included", "manufacturer": "Trane", "model_numbers": ["4TWR7036A1000"]},
+      "matched_system": {"status": "included"},
+      "load_calculation": {"status": "included"},
+      "commissioning": {"status": "included"}
+    }
+  },
+  {
+    "id": "hvac-furnace-afue",
+    "trade": "hvac",
+    "text": "Valley Mechanical\nPROPOSAL TOTAL $9,200.00\nReplace existing gas furnace with a 60,000 BTUH, 96% AFUE furnace. New thermostat and electrical connection included. Permit included. Remove and dispose of old furnace. One-year labor warranty.",
+    "expected": {
+      "hvac_system": {"status": "included", "system_types": ["gas furnace"], "capacity_tons": 5},
+      "hvac_efficiency": {"status": "included", "afue_percent": 96},
+      "thermostat": {"status": "included"},
+      "electrical": {"status": "included"},
+      "permit": {"status": "included"},
+      "removal_disposal": {"status": "included"}
+    }
+  },
+  {
+    "id": "hvac-reused-components",
+    "trade": "hvac",
+    "text": "Pacific Climate\nQUOTE TOTAL $10,500.00\nInstall 3-ton central air conditioner rated 15.2 SEER2. Existing ductwork and refrigerant line set will be reused. Thermostat not included. Permit and system startup included. AHRI certificate not stated.",
+    "expected": {
+      "hvac_system": {"status": "included", "system_types": ["central air conditioner"], "capacity_tons": 3},
+      "hvac_efficiency": {"status": "included", "seer2": 15.2},
+      "ductwork": {"status": "included"},
+      "refrigerant_lines": {"status": "included"},
+      "thermostat": {"status": "excluded"},
+      "permit": {"status": "included"},
+      "matched_system": {"status": "not_stated"}
+    }
+  }
+]

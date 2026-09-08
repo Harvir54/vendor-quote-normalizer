@@ -193,7 +193,7 @@ def classify_waste_allowance(text: str) -> WasteAllowanceItem:
         ),
         "material_order_sq_ft": _number(
             evidence,
-            r"(?:material order|order quantity)\D{0,12}([\d,]+)\s*"
+            r"(?:material order|order quantity|order(?:ed)?)\D{0,12}([\d,]+)\s*"
             r"(?:sq\.?\s*ft\.?|square feet|sf)\b",
         ),
     }

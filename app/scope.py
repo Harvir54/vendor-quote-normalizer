@@ -347,6 +347,7 @@ def classify_drywall_repair(text: str) -> RepairScopeItem:
         "larger than",
         "beyond",
         "quoted separately",
+        "priced separately",
     )
     limitations = [
         evidence

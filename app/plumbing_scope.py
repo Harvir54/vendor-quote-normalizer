@@ -132,8 +132,8 @@ def classify_access_restoration(text: str) -> ScopeItem:
     item = _classify_simple_scope(
         text,
         r"\b(?:drywall|wall|floor|concrete|stucco|cabinet)\b.*"
-        r"\b(?:patch|repair|restore|restoration|access|cutting)\b|"
-        r"\b(?:patch|repair|restore|restoration)\b.*"
+        r"\b(?:patch(?:ing)?|repair|restore|restoration|access|cutting)\b|"
+        r"\b(?:patch(?:ing)?|repair|restore|restoration)\b.*"
         r"\b(?:drywall|wall|floor|concrete|stucco|cabinet)\b",
         ("patch", "repair", "restore", "restoration", "included", "includes"),
     )

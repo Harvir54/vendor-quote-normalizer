@@ -1,0 +1,37 @@
+[
+  {
+    "id": "painting-semantic-prep",
+    "trade": "painting",
+    "text": "Northstar Finishes\nPROPOSAL TOTAL $6,250.00\nScuff-sand glossy surfaces, fill nail holes, caulk open joints, and spot-prime repaired areas. Apply two finish coats to walls. Cover floors and fixed furnishings with drop cloths and plastic. Final cleanup included. Three-year labor warranty.",
+    "expected": {
+      "estimate_total": "$6,250.00",
+      "surface_preparation": {"status": "included"},
+      "property_protection": {"status": "included"},
+      "primer": {"status": "included"},
+      "walls": {"status": "included", "coat_count": 2},
+      "labor_warranty": {"status": "included", "duration_years": 3}
+    }
+  },
+  {
+    "id": "painting-conditional-repair",
+    "trade": "painting",
+    "text": "Freshline Painting\nESTIMATE TOTAL $3,800.00\nPaint walls with one finish coat. Drywall repair, if needed, will be priced separately. Ceilings excluded. Cleanup included.",
+    "expected": {
+      "walls": {"status": "included", "coat_count": 1},
+      "drywall_repair": {"status": "unclear"},
+      "ceilings": {"status": "excluded"},
+      "cleanup": {"status": "included"}
+    }
+  },
+  {
+    "id": "painting-product-details",
+    "trade": "painting",
+    "text": "Coastal Coatings\nQUOTE TOTAL $5,100.00\nWalls receive two coats of Sherwin-Williams Duration Home eggshell. Semi-gloss finish on trim and doors. Lead testing and abatement are not included.",
+    "expected": {
+      "walls": {"status": "included", "coat_count": 2},
+      "paint_specifications": {"status": "included", "manufacturer": "Sherwin-Williams"},
+      "trim_and_doors": {"status": "included"},
+      "lead_safety": {"status": "excluded"}
+    }
+  }
+]

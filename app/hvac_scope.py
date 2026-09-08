@@ -67,7 +67,10 @@ def classify_hvac_equipment(text: str) -> HVACEquipmentItem:
         re.IGNORECASE,
     ):
         model = match.group(1).rstrip(".,;")
-        if model.lower() not in {"number", "included"} and model not in model_numbers:
+        if (
+            any(character.isdigit() for character in model)
+            and model not in model_numbers
+        ):
             model_numbers.append(model)
     manufacturer_match = re.search(
         r"\b(?:manufacturer|brand)\s*[:#-]?\s*([A-Za-z][A-Za-z ]{1,24})(?=\s*(?:\n|,|;|\.|model))",
@@ -112,7 +115,7 @@ def classify_matched_system(text: str) -> ScopeItem:
 def classify_ductwork(text: str) -> ScopeItem:
     return _classify_simple_scope(
         text, r"\b(?:ductwork|duct work|ducts?|return air|supply register)\b",
-        ("install", "replace", "repair", "seal", "modify", "modification", "included", "includes"),
+        ("install", "replace", "repair", "seal", "modify", "modification", "reuse", "reused", "included", "includes"),
     )
 
 

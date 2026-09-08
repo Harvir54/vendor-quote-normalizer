@@ -1,0 +1,36 @@
+[
+  {
+    "id": "flooring-glue-down",
+    "trade": "flooring",
+    "text": "West Coast Floors\nESTIMATE TOTAL $12,400.00\nInstall 1,500 sq ft glue-down luxury vinyl plank with a 20 mil wear layer and 5 mm thickness. Remove existing carpet. Moisture testing and subfloor preparation included. Order 1,650 sq ft including 10% waste.",
+    "expected": {
+      "flooring_installation": {"status": "included", "area_sq_ft": 1500, "wear_layer_mil": 20, "thickness_mm": 5, "installation_method": "glue-down"},
+      "existing_floor_removal": {"status": "included"},
+      "moisture_testing": {"status": "included"},
+      "subfloor_preparation": {"status": "included"},
+      "waste_allowance": {"status": "included", "waste_percent": 10, "material_order_sq_ft": 1650}
+    }
+  },
+  {
+    "id": "flooring-owner-responsibilities",
+    "trade": "flooring",
+    "text": "Metro Flooring\nPROPOSAL TOTAL $8,900.00\nInstall 900 sq ft floating laminate. Owner is responsible for moving furniture and appliances. Baseboards are excluded. Transition strips included. Cleanup included.",
+    "expected": {
+      "flooring_installation": {"status": "included", "area_sq_ft": 900, "installation_method": "floating / click-lock"},
+      "furniture_appliances": {"status": "excluded"},
+      "baseboards": {"status": "excluded"},
+      "transitions": {"status": "included"},
+      "cleanup": {"status": "included"}
+    }
+  },
+  {
+    "id": "flooring-conditional-barrier",
+    "trade": "flooring",
+    "text": "Precision Surfaces\nQUOTE TOTAL $7,450.00\nInstall engineered hardwood over prepared subfloor. Moisture barrier may be added if needed at additional cost. Acclimate material for 72 hours before installation.",
+    "expected": {
+      "flooring_installation": {"status": "included"},
+      "moisture_barrier": {"status": "unclear"},
+      "acclimation": {"status": "included"}
+    }
+  }
+]

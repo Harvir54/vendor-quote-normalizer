@@ -36,7 +36,7 @@ def classify_trim_and_doors(text: str) -> ScopeItem:
     return _classify_simple_scope(
         text,
         r"\b(?:baseboards?|trim|door casings?|door frames?|interior doors?)\b",
-        ("paint", "apply", "coat", "renew", "included", "includes"),
+        ("paint", "apply", "coat", "finish", "renew", "included", "includes"),
     )
 
 
@@ -72,7 +72,10 @@ def classify_paint_specifications(text: str) -> PaintSpecificationItem:
     sheens = [
         label
         for label in ("flat", "matte", "eggshell", "satin", "semi-gloss", "gloss")
-        if re.search(rf"\b{re.escape(label)}\b", lowered)
+        if re.search(
+            rf"(?<!-)\b{re.escape(label)}\b" if label == "gloss" else rf"\b{re.escape(label)}\b",
+            lowered,
+        )
     ]
     status = "excluded" if any(
         phrase in lowered for phrase in ("not included", "excluded")

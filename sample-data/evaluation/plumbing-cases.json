@@ -1,0 +1,37 @@
+[
+  {
+    "id": "plumbing-tankless",
+    "trade": "plumbing",
+    "text": "Everflow Plumbing\nESTIMATE TOTAL $6,900.00\nInstall an electric tankless water heater. Remove and haul away existing water heater. Permit and inspection included. Pressure and leak testing included. Two-year labor warranty.",
+    "expected": {
+      "plumbing_project": {"status": "included", "project_types": ["water heater"]},
+      "water_heater": {"status": "included", "tankless": true, "fuel_type": "electric"},
+      "removal_disposal": {"status": "included"},
+      "permit": {"status": "included"},
+      "testing": {"status": "included"}
+    }
+  },
+  {
+    "id": "plumbing-drain-cleaning",
+    "trade": "plumbing",
+    "text": "Drain Pros\nQUOTE TOTAL $875.00\nHydro-jet main drain and perform sewer camera inspection. Excavation is not included. Final cleanup included.",
+    "expected": {
+      "plumbing_project": {"status": "included", "project_types": ["drain cleaning"]},
+      "camera_inspection": {"status": "included"},
+      "excavation": {"status": "excluded"},
+      "cleanup": {"status": "included"}
+    }
+  },
+  {
+    "id": "plumbing-owner-restoration",
+    "trade": "plumbing",
+    "text": "Reliable Pipeworks\nPROPOSAL TOTAL $18,600.00\nComplete whole-house repipe and replace shutoff valves. Drywall patching and painting by owner. Permit fees included. Pressure testing included.",
+    "expected": {
+      "plumbing_project": {"status": "included", "project_types": ["repipe"]},
+      "shutoff_valves": {"status": "included"},
+      "access_restoration": {"status": "excluded"},
+      "permit": {"status": "included"},
+      "testing": {"status": "included"}
+    }
+  }
+]

@@ -11,6 +11,7 @@ and risk. Every classification retains the contractor's original wording.
 - `docs/` - product requirements and architecture
 - `sample-data/quotes/` - anonymized or synthetic contractor estimates
 - `sample-data/ground-truth/` - human-verified expected results
+- `sample-data/evaluation/` - curated cross-trade wording and edge cases
 - `research/` - interviews, market research, and validation notes
 - `tests/` - automated tests and evaluation cases
 
