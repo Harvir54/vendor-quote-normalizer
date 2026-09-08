@@ -70,6 +70,27 @@ type Comparison = {
 type EngineStatus = "checking" | "ai" | "rules" | "unavailable";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:8000";
+const MAX_PDF_BYTES = 10 * 1024 * 1024;
+const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
+const SUPPORTED_EXTENSIONS = ["pdf", "jpg", "jpeg", "png", "heic", "heif"];
+
+function fileExtension(file: File) {
+  return file.name.split(".").pop()?.toLowerCase() ?? "";
+}
+
+function validateFile(file: File) {
+  const extension = fileExtension(file);
+  if (!SUPPORTED_EXTENSIONS.includes(extension)) {
+    return "Choose a PDF, JPG, PNG, HEIC, or HEIF estimate.";
+  }
+  const limit = extension === "pdf" ? MAX_PDF_BYTES : MAX_IMAGE_BYTES;
+  if (file.size > limit) {
+    return extension === "pdf"
+      ? "PDF estimates must be 10 MB or smaller."
+      : "Image estimates must be 8 MB or smaller.";
+  }
+  return null;
+}
 
 const PAINTING_DEMOS = [
   {
@@ -273,6 +294,14 @@ export default function Home() {
   }
 
   function updateFile(index: number, file: File | null) {
+    if (file) {
+      const validationError = validateFile(file);
+      if (validationError) {
+        setError(validationError);
+        return;
+      }
+    }
+    setError(null);
     setFiles((current) => current.map((value, itemIndex) =>
       itemIndex === index ? file : value,
     ));
@@ -292,7 +321,7 @@ export default function Home() {
     event.preventDefault();
     const selectedFiles = files.filter((file): file is File => file !== null);
     if (selectedFiles.length < 2 || selectedFiles.length !== files.length) {
-      setError("Choose a PDF for every estimate before comparing.");
+      setError("Choose a document for every estimate before comparing.");
       return;
     }
 
@@ -436,7 +465,7 @@ export default function Home() {
             {loading ? "Analyzing estimates..." : "Compare estimates"}
           </button>
           <p className="privacy-note">
-            PDFs are processed temporarily and removed after analysis.
+            Documents are processed temporarily and removed after analysis.
           </p>
         </form>
       </section>
@@ -462,6 +491,19 @@ function FilePicker({
   onRemove?: () => void;
 }) {
   const inputId = `estimate-${label.toLowerCase().replaceAll(" ", "-")}`;
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const extension = file ? fileExtension(file) : "";
+  const browserPreviewable = file !== null && ["jpg", "jpeg", "png"].includes(extension);
+
+  useEffect(() => {
+    if (!file || !browserPreviewable) {
+      setPreviewUrl(null);
+      return;
+    }
+    const nextUrl = URL.createObjectURL(file);
+    setPreviewUrl(nextUrl);
+    return () => URL.revokeObjectURL(nextUrl);
+  }, [file, browserPreviewable]);
 
   return (
     <div className={`file-picker ${file ? "has-file" : ""}`}>
@@ -472,14 +514,23 @@ function FilePicker({
       <span>
         {file
           ? `${file.name} · ${(file.size / 1024).toFixed(0)} KB`
-          : "Choose a PDF estimate"}
+          : "Choose a PDF or image estimate"}
       </span>
+      {previewUrl && (
+        <img className="file-preview" src={previewUrl} alt={`Preview of ${file?.name}`} />
+      )}
+      {file && !previewUrl && (
+        <span className="file-format">{extension.toUpperCase()} document ready</span>
+      )}
       <input
         id={inputId}
         className="native-file-input"
         type="file"
-        accept="application/pdf,.pdf"
-        onChange={(event) => onChange(event.target.files?.[0] ?? null)}
+        accept="application/pdf,image/jpeg,image/png,image/heic,image/heif,.pdf,.jpg,.jpeg,.png,.heic,.heif"
+        onChange={(event) => {
+          onChange(event.target.files?.[0] ?? null);
+          event.currentTarget.value = "";
+        }}
       />
     </div>
   );

@@ -154,6 +154,23 @@ button, input, select { font: inherit; }
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+.file-preview {
+  background: white;
+  border: 1px solid var(--line);
+  height: 150px;
+  object-fit: contain;
+  width: 100%;
+}
+.file-picker > .file-format {
+  background: white;
+  border: 1px solid var(--line);
+  color: var(--green);
+  font-size: 10px;
+  font-weight: 700;
+  padding: 12px;
+  text-align: center;
+  text-transform: uppercase;
+}
 .native-file-input { color: var(--muted); cursor: pointer; font-size: 12px; margin-top: 5px; max-width: 100%; }
 .native-file-input::file-selector-button {
   background: white;
