@@ -33,6 +33,8 @@ type ScopeValue = {
   manufacturer?: string | null;
   product_line?: string | null;
   sheens?: string[];
+  human_value?: string | null;
+  human_note?: string | null;
 };
 
 type Comparison = {
@@ -545,13 +547,21 @@ function Results({
   trade: string;
   onReset: () => void;
 }) {
-  const scopeRows = Object.entries(result.scope_comparison);
+  const [workingResult, setWorkingResult] = useState(result);
+  const [editing, setEditing] = useState(false);
+
+  useEffect(() => {
+    setWorkingResult(result);
+    setEditing(false);
+  }, [result]);
+
+  const scopeRows = Object.entries(workingResult.scope_comparison);
   const primaryScopeRows = scopeRows.filter(([, row]) => !row.detail);
   const detailScopeRows = scopeRows.filter(
     ([, row]) => row.detail && row.values.some((value) => value.status !== "not_stated"),
   );
   const severityOrder: Record<string, number> = { high: 0, medium: 1, low: 2 };
-  const orderedRiskFlags = result.risk_flags
+  const orderedRiskFlags = workingResult.risk_flags
     .map((flag, index) => ({ flag, index }))
     .sort((left, right) =>
       (severityOrder[left.flag.severity] ?? 3) - (severityOrder[right.flag.severity] ?? 3)
@@ -563,7 +573,7 @@ function Results({
     const report = {
       generated_at: new Date().toISOString(),
       trade,
-      ...result,
+      ...workingResult,
     };
     const url = URL.createObjectURL(
       new Blob([JSON.stringify(report, null, 2)], { type: "application/json" }),
@@ -575,6 +585,33 @@ function Results({
     URL.revokeObjectURL(url);
   }
 
+  function correctScopeValue(
+    field: string,
+    vendorIndex: number,
+    patch: Partial<ScopeValue>,
+  ) {
+    setWorkingResult((current) => ({
+      ...current,
+      scope_comparison: {
+        ...current.scope_comparison,
+        [field]: {
+          ...current.scope_comparison[field],
+          values: current.scope_comparison[field].values.map((value, index) =>
+            index === vendorIndex
+              ? {
+                  ...value,
+                  ...patch,
+                  source: "human",
+                  confidence: 1,
+                  review_required: false,
+                }
+              : value,
+          ),
+        },
+      },
+    }));
+  }
+
   return (
     <section className="results" id="comparison-results" aria-live="polite">
       <div className="section-heading">
@@ -584,10 +621,10 @@ function Results({
         </div>
         <div className="difference-card">
           <span>Price range</span>
-          <strong>{formatCents(result.price_range_cents)}</strong>
+          <strong>{formatCents(workingResult.price_range_cents)}</strong>
           <small>
-            {result.lowest_bidder
-              ? `${result.lowest_bidder} submitted the lowest price`
+            {workingResult.lowest_bidder
+              ? `${workingResult.lowest_bidder} submitted the lowest price`
               : "No single lowest bidder was identified"}
           </small>
         </div>
@@ -596,14 +633,29 @@ function Results({
       <div className="report-actions" aria-label="Report actions">
         <button type="button" onClick={() => window.print()}>Print / save PDF</button>
         <button type="button" onClick={downloadResult}>Download data</button>
+        <button
+          className={editing ? "correction-active" : ""}
+          type="button"
+          onClick={() => setEditing((current) => !current)}
+        >
+          {editing ? "Finish corrections" : "Correct results"}
+        </button>
         <button className="reset-button" type="button" onClick={onReset}>New comparison</button>
       </div>
 
+      {editing && (
+        <p className="correction-notice">
+          Update any scope result that does not match the source estimate. Corrections are marked as
+          human verified and included when you download the report. Clarification flags below retain
+          the original analysis.
+        </p>
+      )}
+
       <div
         className="vendor-grid"
-        style={{ gridTemplateColumns: `repeat(${result.vendors.length}, minmax(190px, 1fr))` }}
+        style={{ gridTemplateColumns: `repeat(${workingResult.vendors.length}, minmax(190px, 1fr))` }}
       >
-        {result.vendors.map((vendor, index) => (
+        {workingResult.vendors.map((vendor, index) => (
           <article className="vendor-card" key={`${vendor.vendor_name}-${index}`}>
             <span>Estimate {index + 1}</span>
             <h3>{vendor.vendor_name ?? "Unknown vendor"}</h3>
@@ -620,11 +672,21 @@ function Results({
 
       <div className="results-panel">
         <h3>Scope comparison</h3>
-        <ScopeTable vendors={result.vendors} rows={primaryScopeRows} />
+        <ScopeTable
+          vendors={workingResult.vendors}
+          rows={primaryScopeRows}
+          editing={editing}
+          onCorrect={correctScopeValue}
+        />
         {detailScopeRows.length > 0 && (
           <details className="technical-details">
             <summary>More specifications and compliance details</summary>
-            <ScopeTable vendors={result.vendors} rows={detailScopeRows} />
+            <ScopeTable
+              vendors={workingResult.vendors}
+              rows={detailScopeRows}
+              editing={editing}
+              onCorrect={correctScopeValue}
+            />
           </details>
         )}
       </div>
@@ -632,7 +694,7 @@ function Results({
       <div className="results-panel">
         <h3>Items to clarify</h3>
         <div className="risk-list">
-          {result.risk_flags.length === 0 && (
+          {workingResult.risk_flags.length === 0 && (
             <p className="empty-risks">
               No material scope differences were found. Review the evidence before making a final decision.
             </p>
@@ -656,9 +718,13 @@ function Results({
 function ScopeTable({
   vendors,
   rows,
+  editing,
+  onCorrect,
 }: {
   vendors: Comparison["vendors"];
   rows: Array<[string, Comparison["scope_comparison"][string]]>;
+  editing: boolean;
+  onCorrect: (field: string, vendorIndex: number, patch: Partial<ScopeValue>) => void;
 }) {
   const columns = `minmax(150px, .72fr) repeat(${vendors.length}, minmax(190px, 1fr))`;
   return (
@@ -673,7 +739,12 @@ function ScopeTable({
         <div className="scope-row" key={key} style={{ gridTemplateColumns: columns }}>
           <strong>{row.label}</strong>
           {row.values.map((value, index) => (
-            <ScopeCell value={value} key={index} />
+            <ScopeCell
+              value={value}
+              editing={editing}
+              onCorrect={(patch) => onCorrect(key, index, patch)}
+              key={index}
+            />
           ))}
         </div>
       ))}
@@ -715,15 +786,26 @@ function BidDetails({
   );
 }
 
-function ScopeCell({ value }: { value: ScopeValue }) {
+function ScopeCell({
+  value,
+  editing,
+  onCorrect,
+}: {
+  value: ScopeValue;
+  editing: boolean;
+  onCorrect: (patch: Partial<ScopeValue>) => void;
+}) {
   return (
     <div className="scope-cell">
       <span className={`status ${value.status}`}>{displayStatus(value.status)}</span>
       <span className={`extraction-meta ${value.review_required ? "review" : ""}`}>
-        {value.review_required
+        {value.source === "human"
+          ? "Human verified"
+          : value.review_required
           ? `Needs review · ${Math.round(value.confidence * 100)}% rule confidence`
           : `${Math.round(value.confidence * 100)}% confidence · ${value.source} extracted`}
       </span>
+      {value.human_value && <small className="human-value">{value.human_value}</small>}
       {value.coat_count !== undefined && value.coat_count !== null && (
         <small>{value.coat_count} coat{value.coat_count === 1 ? "" : "s"}</small>
       )}
@@ -780,6 +862,39 @@ function ScopeCell({ value }: { value: ScopeValue }) {
         <small>{value.sheens.join(", ")} finishes</small>
       )}
       {value.evidence && <details><summary>View evidence</summary><p>{value.evidence}</p></details>}
+      {editing && (
+        <div className="correction-fields">
+          <label>
+            Status
+            <select
+              value={value.status}
+              onChange={(event) => onCorrect({ status: event.target.value as ScopeValue["status"] })}
+            >
+              <option value="included">Included</option>
+              <option value="partial">Partial</option>
+              <option value="excluded">Excluded</option>
+              <option value="not_stated">Not stated</option>
+              <option value="unclear">Unclear</option>
+            </select>
+          </label>
+          <label>
+            Correct detail
+            <input
+              value={value.human_value ?? ""}
+              placeholder="e.g. 2 coats"
+              onChange={(event) => onCorrect({ human_value: event.target.value || null })}
+            />
+          </label>
+          <label>
+            Note
+            <input
+              value={value.human_note ?? ""}
+              placeholder="Optional reason"
+              onChange={(event) => onCorrect({ human_note: event.target.value || null })}
+            />
+          </label>
+        </div>
+      )}
     </div>
   );
 }

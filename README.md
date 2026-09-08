@@ -20,8 +20,9 @@ and risk. Every classification retains the contractor's original wording.
 
 The prototype supports interior painting, flooring, plumbing, and HVAC with a
 different comparison profile for each trade. Synthetic demo estimates are
-included for every category. The application extracts digital PDF text and,
-when the optional API key is configured, transcribes scanned PDFs with AI,
+included for every category. The application accepts PDF, JPG, JPEG, PNG,
+HEIC, and HEIF estimates. It extracts digital PDF text locally and, when the
+optional API key is configured, transcribes scanned PDFs and images with AI,
 normalizes trade-specific scope, compares two to five estimates, and displays
 evidence-backed risks in a web interface. Low-confidence wording can be
 interpreted by an optional, evidence-validated AI fallback.
@@ -101,10 +102,12 @@ and `OPENAI_API_KEY` is available, it sends the flagged categories to OpenAI's
 Responses API using a strict structured-output schema. Model evidence must be
 an exact quote from the extracted PDF text before the result is accepted.
 
-The same key enables OCR for image-only PDFs. Digital PDFs are still processed
-locally first, so OCR is not called or billed unless no text layer is found.
-Scanned documents are limited to 10 pages to control cost. You can set
-`OPENAI_OCR_MODEL` separately; otherwise OCR uses `OPENAI_MODEL`.
+The same key enables OCR for image-only PDFs and image uploads. Digital PDFs
+are still processed locally first, so OCR is not called or billed unless no
+text layer is found. Scanned PDFs are limited to 10 pages, PDFs to 10 MB, and
+images to 8 MB to control cost. HEIC and HEIF files are converted to JPEG in
+the backend before OCR. You can set `OPENAI_OCR_MODEL` separately; otherwise
+OCR uses `OPENAI_MODEL`.
 
 Set the key in the same terminal used to start the API:
 
@@ -153,6 +156,18 @@ Create a production frontend build:
 make build
 ```
 
+## Reviewing and correcting results
+
+After a comparison, choose **Correct results** to override a scope status, add
+the corrected detail, and optionally record why it was changed. Corrected
+cells are marked as human verified and are included in printed and downloaded
+reports. Corrections currently live in the browser for that comparison; they
+are not saved to a database or used to train a model. The clarification flags
+continue to reflect the original extraction.
+
+Two image fixtures are included in `sample-data/quotes/` for manual upload
+testing. Image OCR requires a configured API key and can incur model usage.
+
 ## Command-line usage
 
 Extract one sample estimate:
@@ -179,6 +194,7 @@ Choose a different trade with `--trade flooring`, `--trade plumbing`, or
 
 ## Current limitations
 
-- Scanned image-only PDFs require `OPENAI_API_KEY` and are limited to 10 pages.
+- Scanned PDFs and image uploads require `OPENAI_API_KEY`; direct images are
+  currently limited to one estimate image per vendor upload.
 - The current trade profiles cover interior painting, flooring, plumbing, and HVAC.
 - Each comparison accepts between two and five estimates.

@@ -246,7 +246,17 @@ button, input, select { font: inherit; }
   padding: 9px 12px;
 }
 .report-actions button:hover { border-color: var(--green); }
+.report-actions .correction-active { background: var(--green); color: white; }
 .report-actions .reset-button { color: var(--muted); margin-left: auto; }
+.correction-notice {
+  background: var(--green-soft);
+  border: 1px solid #b7ccbf;
+  color: var(--green);
+  font-size: 12px;
+  line-height: 1.5;
+  margin: 0 0 14px;
+  padding: 11px 13px;
+}
 .section-heading { align-items: end; display: flex; gap: 30px; justify-content: space-between; margin-bottom: 18px; }
 .section-kicker { color: var(--muted); font-size: 11px; font-weight: 700; }
 .section-heading h2 { font-size: 30px; letter-spacing: -.025em; margin: 5px 0 0; }
@@ -284,11 +294,36 @@ button, input, select { font: inherit; }
 .status.excluded { background: var(--red-soft); color: var(--red); }
 .status.not_stated, .status.unclear { background: var(--amber-soft); color: var(--amber); }
 .scope-cell small { color: var(--muted); }
+.scope-cell .human-value { color: var(--ink); font-weight: 700; }
 .extraction-meta { color: #7b837e; font-size: 10px; text-transform: capitalize; }
 .extraction-meta.review { color: var(--amber); font-weight: 700; }
 .scope-cell details { color: var(--green); font-size: 12px; }
 .scope-cell summary { cursor: pointer; }
 .scope-cell details p { color: var(--muted); line-height: 1.5; margin: 8px 0 0; }
+.correction-fields {
+  border-top: 1px solid var(--line);
+  display: grid;
+  gap: 7px;
+  margin-top: 5px;
+  padding-top: 9px;
+  width: 100%;
+}
+.correction-fields label {
+  color: var(--muted);
+  display: grid;
+  font-size: 10px;
+  font-weight: 700;
+  gap: 4px;
+}
+.correction-fields input, .correction-fields select {
+  background: white;
+  border: 1px solid var(--line-strong);
+  color: var(--ink);
+  font-size: 11px;
+  min-width: 0;
+  padding: 7px;
+  width: 100%;
+}
 .technical-details { margin-top: 14px; }
 .technical-details > summary { color: var(--green); cursor: pointer; font-size: 12px; font-weight: 700; }
 .technical-details > .scope-table { margin-top: 12px; }
