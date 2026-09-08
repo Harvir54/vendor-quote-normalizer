@@ -1,4 +1,4 @@
-# Painting Estimate Extraction Schema
+# Contractor Estimate Extraction Schema
 
 ## Goal
 
@@ -30,7 +30,7 @@ Each normalized estimate contains:
 - `exclusions`: explicit exclusions in the document.
 - `risk_flags`: facts a reviewer should resolve before accepting the estimate.
 
-## MVP painting categories
+## Initial painting categories
 
 The first version compares these categories:
 
@@ -63,3 +63,11 @@ For both fixtures, the extractor should correctly capture the vendor, address,
 total, deposit, duration, all 12 comparison categories, and every risk flag. A
 field counts as correct only when both its value and status match the manually
 verified ground truth.
+
+## Additional trade profiles
+
+The current application also uses dedicated schemas for flooring, plumbing,
+and HVAC. Each profile defines its own comparison rows, risk-worthy omissions,
+and technical details. Shared bid metadata—such as proposal number, dates,
+license, schedule, payment terms, and exclusions—uses the same structure in
+all four categories.

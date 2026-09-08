@@ -16,7 +16,7 @@ and risk. Every classification retains the contractor's original wording.
 
 ## Current status
 
-The prototype supports interior painting, flooring, and plumbing with a
+The prototype supports interior painting, flooring, plumbing, and HVAC with a
 different comparison profile for each trade. Synthetic demo estimates are
 included for every category. The application extracts digital PDF text and,
 when the optional API key is configured, transcribes scanned PDFs with AI,
@@ -155,10 +155,11 @@ Compare two estimates:
   --compare sample-data/quotes/synthetic-painting-estimate-inland-pro.pdf
 ```
 
-Choose a different trade with `--trade flooring` or `--trade plumbing`.
+Choose a different trade with `--trade flooring`, `--trade plumbing`, or
+`--trade hvac`.
 
 ## Current limitations
 
 - Scanned image-only PDFs require `OPENAI_API_KEY` and are limited to 10 pages.
-- The current trade profiles cover interior painting, flooring, and plumbing.
+- The current trade profiles cover interior painting, flooring, plumbing, and HVAC.
 - Each comparison accepts between two and five estimates.

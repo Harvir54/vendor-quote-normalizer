@@ -332,7 +332,7 @@ export default function Home() {
           <span className="brand-mark">VQ</span>
           <span>Vendor Quote Normalizer</span>
         </a>
-        <span className="prototype-label">Painting · Flooring · Plumbing</span>
+        <span className="prototype-label">Painting · Flooring · Plumbing · HVAC</span>
       </header>
 
       <section className="hero" id="top">
@@ -499,6 +499,14 @@ function Results({
   const detailScopeRows = scopeRows.filter(
     ([, row]) => row.detail && row.values.some((value) => value.status !== "not_stated"),
   );
+  const severityOrder: Record<string, number> = { high: 0, medium: 1, low: 2 };
+  const orderedRiskFlags = result.risk_flags
+    .map((flag, index) => ({ flag, index }))
+    .sort((left, right) =>
+      (severityOrder[left.flag.severity] ?? 3) - (severityOrder[right.flag.severity] ?? 3)
+      || left.index - right.index,
+    )
+    .map(({ flag }) => flag);
 
   function downloadResult() {
     const report = {
@@ -578,11 +586,11 @@ function Results({
               No material scope differences were found. Review the evidence before making a final decision.
             </p>
           )}
-          {result.risk_flags.map((flag, index) => (
+          {orderedRiskFlags.map((flag, index) => (
             <article className="risk-card" key={`${flag.code}-${flag.vendor_name}-${index}`}>
               <div>
                 <span className={`severity ${flag.severity}`}>{flag.severity}</span>
-                <strong>{flag.vendor_name}</strong>
+                <strong>{flag.vendor_name ?? "Across estimates"}</strong>
               </div>
               <p>{flag.message}</p>
               {flag.evidence && <blockquote>“{flag.evidence}”</blockquote>}
